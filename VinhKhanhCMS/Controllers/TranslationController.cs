@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using VinhKhanhCMS.Data;
 using VinhKhanhCMS.Models;
 using VinhKhanhCMS.Services;
-using static Google.Api.Distribution.Types;
 
 namespace VinhKhanhCMS.Controllers;
 
@@ -12,12 +11,21 @@ public class TranslationController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly TtsService _tts;
+    private readonly IConfiguration _config;
 
-    public TranslationController(AppDbContext context, TtsService tts)
+    public TranslationController(AppDbContext context, TtsService tts, IConfiguration config)
     {
         _context = context;
         _tts = tts;
+        _config = config;
     }
+
+    // ✅ Lấy base URL từ env var API_BASE_URL (Render) hoặc fallback về config/request
+    private string GetBaseUrl() =>
+        Environment.GetEnvironmentVariable("API_BASE_URL")
+        ?? _config["ApiBaseUrl"]
+        ?? $"{Request.Scheme}://{Request.Host}";
+
     [HttpPut("{id}")]
     public IActionResult Update(int poiId, int id, PoiTranslation updated)
     {
@@ -35,6 +43,7 @@ public class TranslationController : ControllerBase
 
         return Ok(trans);
     }
+
     [HttpDelete("{id}")]
     public IActionResult Delete(int poiId, int id)
     {
@@ -48,6 +57,7 @@ public class TranslationController : ControllerBase
 
         return Ok();
     }
+
     [HttpGet]
     public IActionResult Get(int poiId)
     {
@@ -65,20 +75,19 @@ public class TranslationController : ControllerBase
         if (poi == null) return NotFound("POI not found");
 
         // 🔥 XÓA TOÀN BỘ TRANSLATION CŨ CỦA POI
-        var old = _context.PoiTranslations
-            .Where(x => x.PoiId == poiId);
-
+        var old = _context.PoiTranslations.Where(x => x.PoiId == poiId);
         _context.PoiTranslations.RemoveRange(old);
         await _context.SaveChangesAsync();
 
-        var baseUrl = "http://192.168.1.11:5137";
+        // ✅ Dùng URL động thay vì hardcode IP
+        var baseUrl = GetBaseUrl();
 
         var langs = new[]
         {
-        "vi","en","es","fr","de",
-        "zh","ja","ko","ru","it",
-        "pt","hi"
-    };
+            "vi","en","es","fr","de",
+            "zh","ja","ko","ru","it",
+            "pt","hi"
+        };
 
         var result = new List<PoiTranslation>();
 
@@ -119,6 +128,7 @@ public class TranslationController : ControllerBase
 
         return Ok(result);
     }
+
     [HttpDelete("delete-all")]
     public IActionResult DeleteAll(int poiId)
     {
@@ -135,42 +145,34 @@ public class TranslationController : ControllerBase
         {
             if (!string.IsNullOrEmpty(item.AudioUrl))
             {
-                // lấy tên file từ URL
                 var fileName = Path.GetFileName(item.AudioUrl);
                 var filePath = Path.Combine(folderPath, fileName);
 
                 if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath); // ❌ xóa file mp3
-                }
+                    System.IO.File.Delete(filePath);
             }
         }
 
-        // ❌ xóa DB
         _context.PoiTranslations.RemoveRange(translations);
         _context.SaveChanges();
 
         return Ok("Đã xóa toàn bộ translation + audio");
     }
+
     private async Task<string> RealTranslate(string text, string targetLang)
     {
         try
         {
             var client = new HttpClient();
-
             var url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl={targetLang}&dt=t&q={Uri.EscapeDataString(text)}";
-
             var response = await client.GetStringAsync(url);
-
             var json = System.Text.Json.JsonDocument.Parse(response);
-
             var translated = json.RootElement[0][0][0].GetString();
-
             return translated ?? text;
         }
         catch
         {
-            return text; // fallback nếu lỗi
+            return text;
         }
     }
 }

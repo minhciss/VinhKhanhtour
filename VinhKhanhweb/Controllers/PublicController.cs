@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 using VinhKhanhadmin.Models;
 
@@ -8,8 +8,8 @@ public class PublicController : Controller
 
     public PublicController(IHttpClientFactory factory)
     {
-        _http = factory.CreateClient();
-        _http.BaseAddress = new Uri("http://192.168.31.99:5137/");
+        // ✅ Dùng named HttpClient "CmsApi" — URL được config từ env var CMS_API_URL
+        _http = factory.CreateClient("CmsApi");
     }
 
     public async Task<IActionResult> Poi(int id)

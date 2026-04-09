@@ -1,4 +1,4 @@
-﻿@model VinhKhanhadmin.Models.Poi
+@model VinhKhanhadmin.Models.Poi
 
 <h2 class="mb-3">✏ Sửa POI</h2>
 
@@ -46,7 +46,7 @@
 
     <div class="mb-3">
         <img id="previewImg"
-             src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "" : "http://localhost:5137/images/" + Model.ImageUrl)"
+             src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "" : ViewBag.CmsBaseUrl + "/images/" + Model.ImageUrl)"
              style="max-width:200px; @(string.IsNullOrEmpty(Model.ImageUrl) ? "display:none;" : "")" />
     </div>
 
@@ -67,10 +67,11 @@
 <script>
     const input = document.getElementById("imgInput");
     const img = document.getElementById("previewImg");
+    const cmsBaseUrl = "@ViewBag.CmsBaseUrl";
 
     input.addEventListener("input", function () {
         if (this.value) {
-            img.src = "http://localhost:5137/images/" + this.value;
+            img.src = cmsBaseUrl + "/images/" + this.value;
             img.style.display = "block";
         } else {
             img.style.display = "none";

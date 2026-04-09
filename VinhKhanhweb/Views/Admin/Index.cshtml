@@ -1,4 +1,4 @@
-﻿@model List<Poi>
+@model List<Poi>
 
 <div class="card shadow-sm bg-white text-dark">
     <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
@@ -16,7 +16,8 @@
                     <th>Mô tả</th>
                     <th>Địa chỉ</th>
                     <th>Trạng thái</th>
-                    <th style="width:250px;">Hành động</th>
+                    <th>QR</th>
+                    <th style="width:200px;">Hành động</th>
                 </tr>
             </thead>
 
@@ -37,6 +38,11 @@
                             {
                                 <span class="badge bg-secondary">Tắt</span>
                             }
+                        </td>
+
+                        <td>
+                            @* ✅ QR URL động từ AdminBaseUrl — hoạt động mọi mạng *@
+                            <img src="@ViewBag.AdminBaseUrl/Poi/Qr/@item.Id" width="80" />
                         </td>
 
                         <td>
@@ -65,14 +71,10 @@
                                     ✅
                                 </a>
                             }
-                            <td>
-                                <img src="http://192.168.1.11:7170/Poi/Qr/@item.Id" width="100" />
-                            </td>
-                           
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
-</div>
+</div>

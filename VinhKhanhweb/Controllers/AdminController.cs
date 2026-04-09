@@ -1,22 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
-using VinhKhanhadmin.Models; // 👈 QUAN TRỌNG (fix lỗi PoiTranslation)
+using VinhKhanhadmin.Models;
 
 public class AdminController : Controller
 {
     private readonly HttpClient _http;
+    private readonly string _adminBaseUrl;
 
-    public AdminController(IHttpClientFactory factory)
+    public AdminController(IHttpClientFactory factory, IConfiguration config)
     {
-        _http = factory.CreateClient();
-        _http.BaseAddress = new Uri("http://localhost:5137/");
-        _http.Timeout = TimeSpan.FromMinutes(5);
+        _http = factory.CreateClient("CmsApi");
+        _adminBaseUrl = Environment.GetEnvironmentVariable("ADMIN_BASE_URL")
+            ?? config["AdminBaseUrl"]
+            ?? "http://localhost:7170";
     }
 
     // 📌 LIST
     public async Task<IActionResult> Index()
     {
         var data = await _http.GetFromJsonAsync<List<Poi>>("api/pois");
+        ViewBag.AdminBaseUrl = _adminBaseUrl;
         return View(data ?? new List<Poi>());
     }
 
@@ -43,9 +46,11 @@ public class AdminController : Controller
     public async Task<IActionResult> Edit(int id)
     {
         var poi = await _http.GetFromJsonAsync<Poi>($"api/pois/{id}");
-
-        // 👉 load translations
         poi.Translations = await GetTranslations(id);
+
+        // ✅ Truyền CMS base URL để hiển thị preview ảnh
+        var cmsBaseUrl = _http.BaseAddress?.ToString()?.TrimEnd('/') ?? "http://localhost:5137";
+        ViewBag.CmsBaseUrl = cmsBaseUrl;
 
         return View(poi);
     }
@@ -117,7 +122,7 @@ public class AdminController : Controller
     // 📌 DELETE TRANSLATION
     public async Task<IActionResult> DeleteTranslation(int poiId, int id)
     {
-        await _http.DeleteAsync($"api/translations/{id}"); // 👈 FIX ROUTE
+        await _http.DeleteAsync($"api/pois/{poiId}/translations/{id}");
         return RedirectToAction("Edit", new { id = poiId });
     }
 }

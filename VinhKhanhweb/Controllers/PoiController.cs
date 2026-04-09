@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 using VinhKhanhadmin.Models;
 using QRCoder;
@@ -6,11 +6,14 @@ using QRCoder;
 public class PoiController : Controller
 {
     private readonly HttpClient _http;
+    private readonly string _adminBaseUrl;
 
-    public PoiController(IHttpClientFactory factory)
+    public PoiController(IHttpClientFactory factory, IConfiguration config)
     {
-        _http = factory.CreateClient();
-        _http.BaseAddress = new Uri("http://localhost:5137/");
+        _http = factory.CreateClient("CmsApi");
+        _adminBaseUrl = Environment.GetEnvironmentVariable("ADMIN_BASE_URL")
+            ?? config["AdminBaseUrl"]
+            ?? "http://localhost:7170";
     }
 
     public async Task<IActionResult> Detail(int id)
@@ -23,9 +26,11 @@ public class PoiController : Controller
 
         return View(poi);
     }
+
     public IActionResult Qr(int id)
     {
-        var url = $"http://192.168.31.99:7170/Public/Poi/{id}";
+        // ✅ Dùng AdminBaseUrl động thay vì hardcode IP
+        var url = $"{_adminBaseUrl}/Public/Poi/{id}";
 
         var qrGenerator = new QRCodeGenerator();
         var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanhCMS.Data;
 using VinhKhanhCMS.Models;
@@ -10,11 +10,19 @@ namespace VinhKhanhCMS.Controllers;
 public class PoiController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IConfiguration _config;
 
-    public PoiController(AppDbContext context)
+    public PoiController(AppDbContext context, IConfiguration config)
     {
         _context = context;
+        _config = config;
     }
+
+    // ✅ Lấy base URL từ config (env var API_BASE_URL khi deploy Render)
+    private string GetBaseUrl() =>
+        Environment.GetEnvironmentVariable("API_BASE_URL")
+        ?? _config["ApiBaseUrl"]
+        ?? $"{Request.Scheme}://{Request.Host}";
 
     // 🔍 Lấy tất cả POI
     [HttpGet]
@@ -24,18 +32,17 @@ public class PoiController : ControllerBase
             .Include(p => p.Translations)
             .ToList();
 
-        // 🔥 FIX AUDIO URL
-        var baseUrl = "http://10.0.2.2:5137"; // Android Emulator
+        var baseUrl = GetBaseUrl();
 
         foreach (var poi in data)
         {
-            // ✅ FIX IMAGE
+            // ✅ FIX IMAGE URL
             if (!string.IsNullOrEmpty(poi.ImageUrl) && !poi.ImageUrl.StartsWith("http"))
             {
                 poi.ImageUrl = baseUrl + "/images/" + poi.ImageUrl;
             }
 
-            // FIX AUDIO
+            // ✅ FIX AUDIO URL
             if (poi.Translations != null)
             {
                 foreach (var t in poi.Translations)
@@ -50,6 +57,7 @@ public class PoiController : ControllerBase
 
         return Ok(data);
     }
+
     [HttpPut("{id}/toggle")]
     public IActionResult Toggle(int id)
     {
@@ -72,9 +80,7 @@ public class PoiController : ControllerBase
 
         if (poi == null) return NotFound();
 
-
-        // 🔥 FIX AUDIO URL
-        var baseUrl = "http://10.0.2.2:5137";
+        var baseUrl = GetBaseUrl();
 
         if (poi.Translations != null)
         {
@@ -89,6 +95,7 @@ public class PoiController : ControllerBase
 
         return Ok(poi);
     }
+
     // ➕ Tạo POI
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] Poi poi)
@@ -133,4 +140,4 @@ public class PoiController : ControllerBase
 
         return Ok();
     }
-}
+}

@@ -1,4 +1,4 @@
-﻿
+
 using Plugin.Maui.Audio;
 
 public class AudioService
@@ -10,9 +10,17 @@ public class AudioService
         _audioManager = AudioManager.Current;
     }
 
-    public async Task PlayAsync(string url)
+    // ✅ Hỗ trợ cả URL Render (https://...) và URL local (http://...)
+    // AudioUrl từ API đã là URL đầy đủ — không cần prefix thêm
+    public async Task PlayAsync(string audioUrl)
     {
-        var stream = await new HttpClient().GetStreamAsync("http://10.0.2.2:5137" + url);
+        // Nếu audioUrl là URL tuyệt đối thì dùng thẳng
+        // Nếu là path tương đối thì ghép với CmsBaseUrl
+        var fullUrl = audioUrl.StartsWith("http")
+            ? audioUrl
+            : VinhKhanhTour.Services.ApiService.CmsBaseUrl + audioUrl;
+
+        var stream = await new HttpClient().GetStreamAsync(fullUrl);
         var player = _audioManager.CreatePlayer(stream);
         player.Play();
     }

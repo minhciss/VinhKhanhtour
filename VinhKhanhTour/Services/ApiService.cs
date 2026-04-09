@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Text.Json;
 using VinhKhanhTour.Models;
 
@@ -8,10 +8,13 @@ public class ApiService
 {
     private readonly HttpClient _httpClient;
 
+    // ✅ URL Render sau khi deploy — thay bằng URL thật của VinhKhanhCMS trên Render
+    public const string CmsBaseUrl = "https://vinhkhanh-cms.onrender.com";
+
     public ApiService()
     {
         _httpClient = new HttpClient();
-        _httpClient.BaseAddress = new Uri("http://10.0.2.2:5137"); // Android emulator
+        _httpClient.BaseAddress = new Uri(CmsBaseUrl);
     }
 
     public async Task<List<Poi>> GetPoisAsync()
