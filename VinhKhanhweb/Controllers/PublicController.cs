@@ -19,6 +19,11 @@ public class PublicController : Controller
             $"api/pois/{id}/translations");
 
         ViewBag.Translations = translations;
+        
+        // Pass CmsBaseUrl to view for correct image mapping
+        ViewBag.CmsBaseUrl = Environment.GetEnvironmentVariable("CMS_API_URL") 
+            ?? "http://localhost:5137";
+            
         return View(poi);
     }
 }

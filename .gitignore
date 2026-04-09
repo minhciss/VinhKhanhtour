@@ -1,18 +1,7 @@
-# Visual Studio
 .vs/
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# Build
 bin/
 obj/
-
-# .NET
 *.dll
 *.exe
 *.pdb
-
-# Others
 *.log
