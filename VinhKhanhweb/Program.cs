@@ -15,11 +15,7 @@ builder.Services.AddHttpClient("CmsApi", client =>
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
+app.UseDeveloperExceptionPage();
 
 // ❌ KHÔNG dùng HTTPS redirect (để HTTP hoạt động trên Render)
 // app.UseHttpsRedirection();

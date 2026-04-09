@@ -37,9 +37,16 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();
 
-// ✅ Render inject PORT env var — phải listen đúng port đó
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5137";
-app.Run($"http://0.0.0.0:{port}");
+// ✅ Render inject PORT env var — phải listen đúng port đó (nếu có)
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    app.Run($"http://0.0.0.0:{port}");
+}
+else
+{
+    app.Run();
+}
 
 // ── Helper: chuyển URL postgres:// → chuỗi kết nối Npgsql ──
 static string ConvertPostgresUrl(string url)
@@ -53,4 +60,4 @@ static string ConvertPostgresUrl(string url)
     var pass = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
     return $"Host={host};Port={portNum};Database={db};Username={user};Password={pass};" +
            "SSL Mode=Require;Trust Server Certificate=true";
-}
+}

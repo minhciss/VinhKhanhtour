@@ -1,4 +1,4 @@
-﻿@model Poi
+@model Poi
 @{
     Layout = "~/Views/Shared/_PublicLayout.cshtml";
     var list = ViewBag.Translations as List<PoiTranslation>;
@@ -57,20 +57,27 @@
 
     <h3>🎧 Nghe thuyết minh</h3>
 
-    <!-- CHỌN NGÔN NGỮ -->
-    <select id="langSelect" onchange="changeLang()">
-        @foreach (var item in list)
-        {
-            <option value="@item.AudioUrl">@item.LanguageCode</option>
-        }
-    </select>
+    @if (list != null && list.Count > 0)
+    {
+        <!-- CHỌN NGÔN NGỮ -->
+        <select id="langSelect" onchange="changeLang()">
+            @foreach (var item in list)
+            {
+                <option value="@item.AudioUrl">@item.LanguageCode</option>
+            }
+        </select>
 
-    <!-- AUDIO -->
-    <div class="audio-box">
-        <audio id="audioPlayer" controls autoplay style="width:100%">
-            <source src="@list[0].AudioUrl" type="audio/mpeg" />
-        </audio>
-    </div>
+        <!-- AUDIO -->
+        <div class="audio-box">
+            <audio id="audioPlayer" controls autoplay style="width:100%">
+                <source src="@list[0].AudioUrl" type="audio/mpeg" />
+            </audio>
+        </div>
+    }
+    else
+    {
+        <p style="color: red;">Chưa có bản thu âm cho địa điểm này.</p>
+    }
 </div>
 <a href="https://www.google.com/maps/search/?api=1&query=@Model.Address"
        target="_blank"
