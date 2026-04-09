@@ -8,9 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Render cung cấp DATABASE_URL dạng postgres://user:pass@host:port/db
-// → cần chuyển sang format Npgsql
-if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
+// Render cung cấp DATABASE_URL dạng postgres:// hoặc postgresql://
+if (!string.IsNullOrEmpty(connectionString) && 
+    (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://")))
 {
     connectionString = ConvertPostgresUrl(connectionString);
 }
