@@ -1,0 +1,48 @@
+# render.yaml — cấu hình Infrastructure as Code cho Render.com
+# Đặt file này ở root của repo (VinhKhanhweb/)
+
+services:
+  # ─── 1. VinhKhanhCMS — API Backend ────────────────────────────
+  - type: web
+    name: vinhkhanh-cms
+    env: docker
+    dockerfilePath: ./VinhKhanhCMS/Dockerfile
+    dockerContext: ./VinhKhanhCMS
+    plan: free
+    envVars:
+      # ✅ Render tự inject DATABASE_URL từ PostgreSQL service bên dưới
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vinhkhanh-db
+          property: connectionString
+      # ✅ Sau khi deploy xong, điền URL thật của service này vào đây
+      # Ví dụ: https://vinhkhanh-cms.onrender.com
+      - key: API_BASE_URL
+        sync: false   # ← user tự điền trong Render dashboard
+      # ✅ URL của Admin web (để build QR code đúng)
+      - key: ADMIN_BASE_URL
+        sync: false   # ← user tự điền sau khi deploy Admin
+
+  # ─── 2. VinhKhanhweb — Admin MVC ──────────────────────────────
+  - type: web
+    name: vinhkhanh-admin
+    env: docker
+    dockerfilePath: ./VinhKhanhweb/Dockerfile
+    dockerContext: ./VinhKhanhweb
+    plan: free
+    envVars:
+      # ✅ URL của CMS API (điền sau khi deploy CMS xong)
+      # Ví dụ: https://vinhkhanh-cms.onrender.com
+      - key: CMS_API_URL
+        sync: false   # ← user tự điền trong Render dashboard
+      # ✅ URL của chính service Admin này (dùng để build QR code)
+      # Ví dụ: https://vinhkhanh-admin.onrender.com
+      - key: ADMIN_BASE_URL
+        sync: false   # ← user tự điền sau khi có URL
+
+# ─── PostgreSQL Database (Free 90 ngày) ───────────────────────
+databases:
+  - name: vinhkhanh-db
+    databaseName: vinhkhanh
+    user: vinhkhanh
+    plan: free
