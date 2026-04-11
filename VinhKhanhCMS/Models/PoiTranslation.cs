@@ -11,6 +11,9 @@ public class PoiTranslation
     public string Description { get; set; } = string.Empty;
     public string AudioUrl { get; set; } = string.Empty;
 
+    [JsonIgnore]
+    public byte[]? AudioData { get; set; } // Lấy âm thanh lưu trong datatbase
+
     [JsonIgnore] // 🔥 QUAN TRỌNG
     public Poi? Poi { get; set; } // 🔥 cho phép null
 }

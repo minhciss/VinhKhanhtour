@@ -65,6 +65,13 @@ public class TranslationController : ControllerBase
             .Where(x => x.PoiId == poiId)
             .ToList();
 
+        var baseUrl = GetBaseUrl();
+        foreach (var item in list)
+        {
+            if (!string.IsNullOrEmpty(item.AudioUrl) && !item.AudioUrl.StartsWith("http"))
+                item.AudioUrl = baseUrl + item.AudioUrl;
+        }
+
         return Ok(list);
     }
 
@@ -104,29 +111,37 @@ public class TranslationController : ControllerBase
             var text = $"{translatedTitle}. {translatedDesc}";
             var audioBytes = await _tts.GenerateAudio(text);
 
-            var fileName = Guid.NewGuid() + ".mp3";
-            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/audio");
-
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
-
-            var filePath = Path.Combine(folderPath, fileName);
-            await System.IO.File.WriteAllBytesAsync(filePath, audioBytes);
-
             result.Add(new PoiTranslation
             {
                 PoiId = poiId,
                 LanguageCode = lang,
                 Title = translatedTitle,
                 Description = translatedDesc,
-                AudioUrl = baseUrl + "/audio/" + fileName
+                AudioData = audioBytes,
+                AudioUrl = "" // Tạm thời rỗng, sẽ cập nhật sau khi lấy Id
             });
         }
 
         _context.PoiTranslations.AddRange(result);
         await _context.SaveChangesAsync();
 
+        foreach(var t in result)
+        {
+            t.AudioUrl = $"/api/pois/audio/translation/{t.Id}";
+        }
+        await _context.SaveChangesAsync();
+
         return Ok(result);
+    }
+
+    [HttpGet("/api/pois/audio/translation/{id}")]
+    public IActionResult GetAudio(int id)
+    {
+        var trans = _context.PoiTranslations.Find(id);
+        if (trans == null || trans.AudioData == null)
+            return NotFound();
+
+        return File(trans.AudioData, "audio/mpeg");
     }
 
     [HttpDelete("delete-all")]
@@ -138,20 +153,6 @@ public class TranslationController : ControllerBase
 
         if (!translations.Any())
             return NotFound("Không có dữ liệu để xóa");
-
-        var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/audio");
-
-        foreach (var item in translations)
-        {
-            if (!string.IsNullOrEmpty(item.AudioUrl))
-            {
-                var fileName = Path.GetFileName(item.AudioUrl);
-                var filePath = Path.Combine(folderPath, fileName);
-
-                if (System.IO.File.Exists(filePath))
-                    System.IO.File.Delete(filePath);
-            }
-        }
 
         _context.PoiTranslations.RemoveRange(translations);
         _context.SaveChanges();

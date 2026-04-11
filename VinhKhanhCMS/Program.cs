@@ -30,6 +30,15 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    try
+    {
+        db.Database.ExecuteSqlRaw("ALTER TABLE \"PoiTranslations\" ADD COLUMN \"AudioData\" bytea;");
+    }
+    catch (Exception)
+    {
+        // Cột đã tồn tại hoặc lỗi (bỏ qua)
+    }
 }
 
 app.UseStaticFiles();
