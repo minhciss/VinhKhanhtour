@@ -6,14 +6,12 @@ using QRCoder;
 public class PoiController : Controller
 {
     private readonly HttpClient _http;
-    private readonly string _adminBaseUrl;
+    private readonly IConfiguration _config;
 
     public PoiController(IHttpClientFactory factory, IConfiguration config)
     {
         _http = factory.CreateClient("CmsApi");
-        _adminBaseUrl = Environment.GetEnvironmentVariable("ADMIN_BASE_URL")
-            ?? config["AdminBaseUrl"]
-            ?? "http://localhost:7170";
+        _config = config;
     }
 
     public async Task<IActionResult> Detail(int id)
@@ -29,8 +27,15 @@ public class PoiController : Controller
 
     public IActionResult Qr(int id)
     {
-        // ✅ Dùng AdminBaseUrl động thay vì hardcode IP
-        var url = $"{_adminBaseUrl}/Public/Poi/{id}";
+        // Ưu tiên biến môi trường (Render), nếu không có thì lấy động URL truy cập hiện tại
+        string baseUrl = Environment.GetEnvironmentVariable("ADMIN_BASE_URL") ?? _config["AdminBaseUrl"];
+        if (string.IsNullOrEmpty(baseUrl))
+        {
+            var scheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? Request.Scheme;
+            baseUrl = $"{scheme}://{Request.Host}";
+        }
+
+        var url = $"{baseUrl}/Public/Poi/{id}";
 
         var qrGenerator = new QRCodeGenerator();
         var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
