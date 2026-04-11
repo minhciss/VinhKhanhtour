@@ -27,15 +27,10 @@ public class PoiController : Controller
 
     public IActionResult Qr(int id)
     {
-        // Ưu tiên biến môi trường (Render), nếu không có thì lấy động URL truy cập hiện tại
-        string baseUrl = Environment.GetEnvironmentVariable("ADMIN_BASE_URL") ?? _config["AdminBaseUrl"];
-        if (string.IsNullOrEmpty(baseUrl))
-        {
-            var scheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? Request.Scheme;
-            baseUrl = $"{scheme}://{Request.Host}";
-        }
-
-        var url = $"{baseUrl}/Public/Poi/{id}";
+        // 🔥 QR Code in ra ngoài đời thật cho du khách quét => PHẢI luôn cố định là public domain của hệ thống.
+        // Không dùng localhost hay IP nội bộ vì khách sẽ không truy cập được.
+        string publicDomain = _config["PublicDomainUrl"] ?? "https://vinhkhanh-admin.onrender.com";
+        var url = $"{publicDomain}/Public/Poi/{id}";
 
         var qrGenerator = new QRCodeGenerator();
         var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
