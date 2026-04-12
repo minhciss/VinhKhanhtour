@@ -1,6 +1,8 @@
 using Plugin.Maui.Audio;
 using VinhKhanhTour.Models;
 using System.Linq;
+using System.Diagnostics;
+using System.Threading;
 
 namespace VinhKhanhTour.Services;
 
@@ -8,56 +10,72 @@ public class NarrationEngine
 {
     private IAudioPlayer? _player;
     private static readonly HttpClient _http = new HttpClient();
+    private CancellationTokenSource? _ttsCts;
 
     public async Task PlayPoiNarrationAsync(Poi poi, bool isManual = false)
     {
         try
         {
-            var lang = Services.LocalizationResourceManager.Instance.CurrentLanguageCode;
+            var lang = LocalizationResourceManager.Instance.CurrentLanguageCode;
 
-            if (poi.Translations == null || poi.Translations.Count == 0)
+            // ── Bước 1: Thử phát audio từ URL remote (khi có API backend) ──────────
+            var translation = poi.Translations?
+                .Where(t => !string.IsNullOrEmpty(t.AudioUrl) && t.AudioUrl.Contains("-"))
+                .FirstOrDefault(t => t.LanguageCode == lang)
+                ?? poi.Translations?
+                    .FirstOrDefault(t => !string.IsNullOrEmpty(t.AudioUrl) && t.AudioUrl.Contains("-"));
+
+            if (translation != null && !string.IsNullOrEmpty(translation.AudioUrl))
             {
-                await Application.Current.MainPage.DisplayAlert("Lỗi", "Không có dữ liệu dịch", "OK");
+                _player?.Stop();
+
+                // Tải audio trong background thread
+                var memoryStream = await Task.Run(async () =>
+                {
+                    var bytes = await _http.GetByteArrayAsync(translation.AudioUrl);
+                    return new MemoryStream(bytes);
+                });
+
+                // Phát trên UI thread
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _player = AudioManager.Current.CreatePlayer(memoryStream);
+                    _player.Play();
+                });
                 return;
             }
-            var translation = poi.Translations
-    .Where(t => t.AudioUrl.Contains("-")) // chỉ lấy audio thật (GUID)
-    .FirstOrDefault(t => t.LanguageCode == lang)
-    ?? poi.Translations.FirstOrDefault();
-            var url = translation?.AudioUrl;
 
+            // ── Bước 2: Fallback TTS (dùng khi local SQLite DB, không có Translations) ──
+            // Bug#2 Fix: Translations là [Ignore] nên luôn rỗng với local DB
+            // → dùng TextToSpeech tích hợp của MAUI với DisplayTtsScript
+            var script = !string.IsNullOrWhiteSpace(poi.DisplayTtsScript)
+                ? poi.DisplayTtsScript
+                : !string.IsNullOrWhiteSpace(poi.DisplayDescription)
+                    ? poi.DisplayDescription
+                    : poi.DisplayName;
 
-            if (string.IsNullOrEmpty(url))
+            if (!string.IsNullOrWhiteSpace(script))
             {
-                await Application.Current.MainPage.DisplayAlert("Lỗi", "Không có audio", "OK");
-                return;
+                // Hủy TTS đang chạy trước
+                _ttsCts?.Cancel();
+                _ttsCts = new CancellationTokenSource();
+
+                await TextToSpeech.Default.SpeakAsync(script, new SpeechOptions
+                {
+                    Volume = 1.0f,
+                    Pitch  = 1.0f
+                }, cancelToken: _ttsCts.Token);
             }
-
-            _player?.Stop();
-
-            // 🔥 tải audio background
-            var memoryStream = await Task.Run(async () =>
-            {
-                var bytes = await _http.GetByteArrayAsync(url);
-                return new MemoryStream(bytes);
-            });
-
-            // 🔥 play trên UI thread
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                _player = AudioManager.Current.CreatePlayer(memoryStream);
-                _player.Play();
-            });
         }
         catch (Exception ex)
         {
-            await MainThread.InvokeOnMainThreadAsync(() =>
-                Application.Current.MainPage.DisplayAlert("Lỗi", ex.Message, "OK"));
+            Debug.WriteLine($"[NarrationEngine] Error: {ex.Message}");
         }
     }
 
     public void CancelCurrentNarration()
     {
         _player?.Stop();
+        _ttsCts?.Cancel(); // Hủy cả TTS fallback
     }
 }

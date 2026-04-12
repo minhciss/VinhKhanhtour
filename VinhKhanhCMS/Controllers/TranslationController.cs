@@ -58,6 +58,25 @@ public class TranslationController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("{langCode}/upload-audio")]
+    public async Task<IActionResult> UploadAudio(int poiId, string langCode, IFormFile audioFile)
+    {
+        var trans = _context.PoiTranslations.FirstOrDefault(x => x.PoiId == poiId && x.LanguageCode == langCode);
+        if (trans == null) return NotFound("Translation not found for this language");
+
+        if (audioFile == null || audioFile.Length == 0) return BadRequest("No audio file provided");
+
+        using (var memoryStream = new MemoryStream())
+        {
+            await audioFile.CopyToAsync(memoryStream);
+            trans.AudioData = memoryStream.ToArray();
+            trans.AudioUrl = $"/api/pois/audio/translation/{trans.Id}";
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(new { AudioUrl = trans.AudioUrl });
+    }
+
     [HttpGet]
     public IActionResult Get(int poiId)
     {

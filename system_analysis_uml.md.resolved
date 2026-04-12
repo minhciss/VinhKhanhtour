@@ -1,0 +1,102 @@
+# Phân Tích Hệ Thống Website Thuyết Minh Tự Động (Audio Guide POI)
+
+Dưới đây là chi tiết phân tích hệ thống sau khi đã mở rộng thêm các tính năng chuyên nghiệp và tuỳ chỉnh luồng "Đăng ký tài khoản quản lý (Owner)" cần được Admin duyệt theo ý của bạn.
+
+---
+
+## 1. Phân Tích Use Case (Sơ đồ Use Case)
+
+### Actor 1: Người dùng (Customer / Tourist)
+*Khách du lịch tham quan tự do, quét mã và nghe.*
+1.  **Quét mã QR POI:** Khách du lịch đến địa điểm, dùng hệ thống để quét mã QR và trực tiếp mở bài thuyết minh của điểm đó.
+2.  **Xem bản đồ xung quanh:** Xem các điểm POI trên bản đồ (Google Maps) dựa theo vị trí hiện tại.
+3.  **Tìm kiếm & Lọc POI:** Tìm theo tên, hoặc Lọc theo danh mục.
+4.  **Nghe Thuyết Minh (Core):** 
+    *   *`<extend>`*: **Chuyển đổi ngôn ngữ** (Nghe tiếng Anh, tiếng Việt...).
+    *   *`<extend>`*: **Tải Audio Offline** (Tải xuống nghe khi không có mạng).
+5.  **Quản lý Tài khoản Cá nhân:**
+    *   **Đăng ký** / **Đăng nhập** (Tự động kích hoạt không cần duyệt).
+6.  **Tương tác với POI (Yêu cầu `<include>` Đăng nhập):**
+    *   **Đánh giá & Bình luận (Review)**
+    *   **Lưu địa điểm yêu thích (Bookmark)**
+    *   **Xem lịch sử đã nghe:** Xem lại danh sách các địa điểm mình từng quét.
+
+### Actor 2: Người Quản Lý Điểm Đến (Owner / Manager)
+*Đóng vai trò là ban quản lý di tích, chủ bảo tàng, hoặc chủ doanh nghiệp.*
+*   **Đăng ký tài khoản Đối Tác/Quản lý (`New`):** Gửi yêu cầu đăng ký mở tài khoản đặc quyền cấp Chủ quản lý. Hệ thống sẽ tạo tài khoản với trạng thái *Chờ duyệt (Pending)*.
+*   **Đăng nhập hệ thống:** Chỉ đăng nhập thành công vào trang quản lý khi Admin đã xác thực và cấp quyền.
+*   **Đăng ký POI mới:** Gửi yêu cầu tạo địa điểm mới. (Cũng chờ duyệt nội dung text).
+*   **Quản lý Thông tin POI chung:** Cập nhật hình ảnh (`ImageUrl`), tọa độ GPS, và trạng thái.
+*   **Quản lý Nội dung Thuyết minh (PoiTranslation):** 
+    *   Thêm/Sửa/Xóa văn bản (Title, Description).
+    *   **Tải lên (Upload) file âm thanh Audio(`.mp3`)** cho từng ngôn ngữ.
+*   **Tạo mã QR:** Trích xuất/Tải xuống mã QR của địa điểm để in ra dán tại thực địa.
+*   **Xem thống kê:** Xem số lượt nghe, lượt quét QR.
+
+### Actor 3: Quản trị viên (Admin)
+*Người điều hành toàn bộ nền tảng.*
+*   **Đăng nhập hệ thống Admin.**
+*   **Kiểm duyệt Tài Khoản Owner (`New`):** Xem xét thông tin (SDT, Email, CMND/Pháp nhân) của người đăng ký làm Chủ quản lý -> Quyết định **Duyệt cấp tài khoản** hoặc **Từ chối**.
+*   **Kiểm duyệt POI:** Duyệt (Approve) hoặc Từ chối (Reject) địa điểm mới do Owner tạo.
+*   **Quản lý Toàn bộ POI và Bản dịch:** Có quyền can thiệp vào File Audio và Text của tất cả mọi điểm để chống thông tin sai lệch.
+*   **Quản lý Người dùng (User/Owner):** Khóa/Phân quyền tài khoản.
+*   **Quản lý Danh mục:** Tạo các loại hình POI.
+
+---
+
+## 2. Phân Tích Sơ Đồ Lớp (Class Diagram)
+
+*Cập nhật trạng thái duyệt vào Bảng AppUser.*
+
+### Bảng Thực thể & Thuộc tính cốt lõi:
+1.  **Lớp `AppUser` (Người dùng)**
+    *   `Id`, `Username`, `Email`, `Role` (User, Owner, Admin)
+    *   `IsActive` (bool): Tài khoản đang mở hay khóa.
+    *   `Status` (`New` - enum): Dùng để duyệt Owner (`Pending`, `Approved`, `Rejected`). User thường thì mặc định là `Approved`.
+2.  **Lớp `Category` (Danh mục POI)**
+    *   `Id`, `Name`, `Icon`
+3.  **Lớp `Poi` (Điểm đến)**
+    *   `Id`, `CategoryId` (FK), `OwnerId` (FK)
+    *   `Name`, `Address`, `Latitude`, `Longitude`, `ImageUrl`
+    *   `Status` (Pending, Approved)
+    *   `QrCodeUrl`
+4.  **Lớp `PoiTranslation` (Bản thuyết minh)**
+    *   `Id`, `PoiId` (FK), `LanguageCode`
+    *   `Title`, `Description`, `AudioUrl`
+5.  **Lớp `Review`**
+    *   `Id`, `PoiId` (FK), `UserId` (FK), `Rating`, `Comment`, `CreatedAt`
+6.  **Lớp `UserPoiHistory` (Lịch sử nghe)**
+    *   `Id`, `UserId` (FK), `PoiId` (FK), `IsFavorited`, `LastListenedAt`
+
+---
+
+## 3. Phân Tích Sơ Đồ Tuần Tự (Sequence Diagram)
+
+*(Tôi cập nhật lại Luồng 2 và 3 để tập trung vào Quá trình đăng ký & duyệt Tài Khoản của Owner).*
+
+### Luồng 1: Người dùng quét mã QR và nghe thuyết minh (Giữ nguyên)
+1. Tourist quét mã QR. 
+2. UI gọi API lên PoiController. 
+3. PoiController truy vấn Data. 
+4. Trả về Text và AudioUrl. 
+5. Tourist bấm Nghe. 
+6. Hệ thống stream file Audio về cho người dùng.
+
+### Luồng 2: Owner Đăng ký tài khoản và chờ duyệt
+1. **Khách** (muốn trở thành Owner) mở trang **Đăng ký Đối tác**.
+2. **Khách** điền form (`Username`, `Password`, bằng chứng/chứng nhận).
+3. **UI** gửi thông tin (`Role = Owner`) đến **AuthController**.
+4. **AuthController** tạo tài khoản `AppUser` lưu xuống **Database** gắn kèm trạng thái `Status = Pending`.
+5. **Database** trả về lưu thành công.
+6. **AuthController** phản hồi cho **UI**.
+7. **UI** hiển thị thông báo: "Đăng ký thành công. Vui lòng chờ Admin phê duyệt tài khoản".
+
+### Luồng 3: Admin phê duyệt Tài Khoản Owner
+1. **Admin** đăng nhập vào CMS.
+2. **Admin** request danh sách tài khoản cần duyệt.
+3. **AdminController** gửi list `AppUser` (có Role = Owner & Status = Pending) xuống cho **AdminUI**.
+4. **Admin** kiểm tra thông tin pháp nhân và nhấn **"Duyệt (Approve)"**.
+5. **AdminUI** gọi API truyền `UserId` lên **AdminController**.
+6. **AdminController** update `AppUser.Status = Approved` trong **Database**.
+7. (Ngầm) Hệ thống gửi Email tự động thông báo tài khoản đã kích hoạt tới cho **Owner**.
+8. Kể từ lúc này, **Owner** mới có thể thực hiện hành động **"Đăng nhập hệ thống"**.

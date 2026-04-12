@@ -14,12 +14,30 @@ public class AudioController : Controller
     // ✅ Load danh sách audio theo poiId
     public async Task<IActionResult> Index(int poiId = 1)
     {
-        var data = await _http.GetFromJsonAsync<List<PoiTranslation>>(
-            $"api/pois/{poiId}/translations");
+        var check = CheckAdmin(); if (check != null) return check;
+
+        List<PoiTranslation>? data = new List<PoiTranslation>();
+        try 
+        {
+            data = await _http.GetFromJsonAsync<List<PoiTranslation>>($"api/pois/{poiId}/translations");
+        }
+        catch 
+        {
+            // Bỏ qua lỗi nếu không tìm thấy
+        }
 
         ViewBag.PoiId = poiId;
-
         return View(data ?? new List<PoiTranslation>());
+    }
+    
+    // ── Kiểm tra quyền Admin ──
+    private IActionResult? CheckAdmin()
+    {
+        if (HttpContext.Session.GetString("UserId") == null)
+            return RedirectToAction("Login", "Auth");
+        if (HttpContext.Session.GetString("Role") != "Admin")
+            return RedirectToAction("Index", "Owner");
+        return null;
     }
 
     // ✅ Generate audio

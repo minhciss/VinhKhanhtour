@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Owner Portal - Vĩnh Khánh</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; width: 250px; }
+        .nav-link { color: rgba(255,255,255,0.8); transition: 0.3s; padding: 12px 20px; border-radius: 8px; margin: 0 10px 5px; }
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.15); color: white; }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <!-- SIDEBAR -->
+        <div class="sidebar text-white shadow">
+            <div class="p-4 text-center border-bottom border-light border-opacity-25 mb-3">
+                <i class="bi bi-shop fs-1 text-warning"></i>
+                <h5 class="mt-2 fw-bold">Owner Portal</h5>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Owner">
+                        <i class="bi bi-geo-alt-fill me-2"></i> Quản lý POI của tôi
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Owner/Stats">
+                        <i class="bi bi-bar-chart-fill me-2"></i> Thống kê hoạt động
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="flex-grow-1 d-flex flex-column" style="height:100vh; overflow-y:auto;">
+            <!-- HEADER -->
+            <div class="bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary fw-bold">Hệ Thống Quản Lý Địa Điểm Vĩnh Khánh</h5>
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle border" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle text-primary me-1"></i> @ViewBag.OwnerName
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item text-danger" href="/Auth/Logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- MAIN -->
+            <div class="p-4 flex-grow-1">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

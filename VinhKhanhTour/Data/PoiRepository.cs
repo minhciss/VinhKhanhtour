@@ -26,12 +26,8 @@ namespace VinhKhanhTour.Data
             {
                 if (_hasInitialized && _connection is not null) return;
 
-                // Remove existing DB file to ensure we start fresh during development
+                // Bug#1 Fix: Không xóa DB nữa → dữ liệu tồn tại giữa các lần mở app
                 var dbPath = Constants.DatabasePath.Replace("Data Source=", "");
-                if (File.Exists(dbPath))
-                {
-                    File.Delete(dbPath);
-                }
 
                 _connection = new SQLiteAsyncConnection(dbPath);
                 var result = await _connection.CreateTableAsync<Poi>();

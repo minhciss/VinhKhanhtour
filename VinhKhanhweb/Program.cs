@@ -34,6 +34,11 @@ app.UseSession();         // ✅ PHẢI trước UseAuthorization
 app.UseAuthorization();
 
 app.MapControllerRoute(
+    name: "poi_shortcut",
+    pattern: "poi/{id:int}",
+    defaults: new { controller = "Poi", action = "Detail" });
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Index}/{id?}");
 

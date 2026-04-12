@@ -38,7 +38,12 @@ namespace VinhKhanhTour.PageModels
 
             Services.LocalizationResourceManager.Instance.PropertyChanged += (s, e) => 
             {
-                ApplyFilters(); // Refresh currently displayed items
+                // Thông báo từng POI cập nhật DisplayName/DisplayDescription ngay lập tức
+                // mà không cần restart app → CollectionView re-render cells với ngôn ngữ mới
+                foreach (var poi in _allPois)
+                    poi.RefreshDisplayProperties();
+
+                ApplyFilters();
             };
 
             // Lắng nghe GPS liên tục
@@ -68,9 +73,16 @@ namespace VinhKhanhTour.PageModels
             {
                 IsBusy = true;
 
+                // Gọi API lấy dữ liệu từ Backend
                 var data = await _apiService.GetPoisAsync();
+                
+                // Nếu API tắt hoặc không có data, dùng Local DB làm Fallback
+                if (data == null || data.Count == 0)
+                {
+                    data = await _poiRepository.GetAllPoisAsync();
+                }
 
-                _allPois = data; // lấy từ CMS
+                _allPois = data;
 
                 ApplyFilters();
             }

@@ -1,4 +1,4 @@
-﻿namespace VinhKhanhadmin.Models;
+namespace VinhKhanhadmin.Models;
 
 public class Poi
 {
@@ -14,6 +14,8 @@ public class Poi
     public string ImageUrl { get; set; } = "";
 
     public bool IsActive { get; set; } = true;
-    // 🔥 THÊM DÒNG NÀY
+    public string Status { get; set; } = "Approved"; // Chờ duyệt: Pending
+    public int? OwnerId { get; set; }
+
     public List<PoiTranslation> Translations { get; set; } = new();
 }

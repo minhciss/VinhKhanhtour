@@ -296,9 +296,9 @@
     </Style>
 
     <Style x:Key="FilterButtonStyleSecondary" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FFF5EE, Dark=#2A2A2A}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FFF5F5, Dark=#2A2A2A}" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DarkOnLightBackground}, Dark={StaticResource LightOnDarkBackground}}" />
-        <Setter Property="BorderColor" Value="{AppThemeBinding Light=#E8D5C8, Dark=#444444}" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light=#FFCDD2, Dark=#444444}" />
         <Setter Property="BorderWidth" Value="1" />
         <Setter Property="CornerRadius" Value="20" />
         <Setter Property="Padding" Value="20,0" />

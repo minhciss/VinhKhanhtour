@@ -1,0 +1,63 @@
+@{
+    Layout = "_OwnerLayout";
+}
+@model VinhKhanhadmin.Models.Poi
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-header bg-white border-bottom py-3">
+        <h4 class="mb-0 text-primary fw-bold"><i class="bi bi-plus-square me-2"></i>Đăng ký địa điểm mới</h4>
+    </div>
+    <div class="card-body p-4">
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-info-circle me-1"></i> Tất cả địa điểm mới đều cần được Admin kiểm duyệt trước khi hiển thị công khai.
+        </div>
+
+        <form method="post" action="/Owner/Create">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark">Tên địa điểm *</label>
+                    <input asp-for="Name" class="form-control" required placeholder="Ví dụ: Chùa Phước Kiển..." />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark">Địa chỉ *</label>
+                    <input asp-for="Address" class="form-control" required placeholder="Số nhà, Đường, Xã, Huyện..." />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold text-dark">Mô tả giới thiệu *</label>
+                <span class="d-block small text-muted mb-2">Đoạn mô tả này sẽ được dùng để tạo thuyết minh tự động. Càng chi tiết càng tốt!</span>
+                <textarea asp-for="Description" class="form-control" rows="5" required placeholder="Lịch sử, quy mô, đặc điểm nổi bật..."></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark">Kinh độ (Longitude) *</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-compass"></i></span>
+                        <input asp-for="Longitude" class="form-control" required type="number" step="0.0000001" placeholder="105.xxx"/>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark">Vĩ độ (Latitude) *</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-compass"></i></span>
+                        <input asp-for="Latitude" class="form-control" required type="number" step="0.0000001" placeholder="10.xxx" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold text-dark">Tên file hình ảnh đại diện</label>
+                <input asp-for="ImageUrl" class="form-control" placeholder="vidu.jpg" />
+                <small class="text-muted">Bạn có thể bổ sung file ảnh sau qua Admin.</small>
+            </div>
+
+            <hr class="mb-4" />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="bi bi-send me-1"></i>Gửi yêu cầu phê duyệt</button>
+                <a href="/Owner" class="btn btn-light border px-4">Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+</div>

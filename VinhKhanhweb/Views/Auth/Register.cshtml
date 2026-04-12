@@ -1,0 +1,170 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng ký Đối tác - Hệ thống Thuyết Minh Vĩnh Khánh</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 0;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(99,179,237,0.15), transparent);
+            top: -100px; right: -100px;
+            border-radius: 50%;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(237,137,54,0.1), transparent);
+            bottom: -80px; left: -80px;
+            border-radius: 50%;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 600px; /* To hơn chút đăng nhập */
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 1;
+        }
+        .logo-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 1.2rem;
+            box-shadow: 0 10px 25px rgba(237,137,54,0.4);
+        }
+        .form-control {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            background: rgba(255,255,255,0.12);
+            border-color: #f6ad55;
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(246,173,85,0.25);
+        }
+        .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        label { color: rgba(255,255,255,0.8); font-weight: 500; font-size: 0.85rem; }
+        .btn-login {
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(237,137,54,0.4);
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(237,137,54,0.5);
+            color: white;
+        }
+        .divider { border-color: rgba(255,255,255,0.15); }
+        .register-link a { color: #f6ad55; text-decoration: none; font-weight: 600; }
+        .register-link a:hover { text-decoration: underline; }
+        .register-link { color: rgba(255,255,255,0.6); font-size: 0.9rem; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <div class="logo-icon">📝</div>
+    <h4 class="text-white text-center mb-1 fw-bold">Đăng ký Đối Tác</h4>
+    <p class="text-center mb-4" style="color:rgba(255,255,255,0.5); font-size:0.85rem;">Trở thành người quản lý trên hệ thống Vĩnh Khánh</p>
+
+    @if (ViewBag.Success != null)
+    {
+        <div class="alert alert-success rounded-3 py-2 px-3 mb-3 text-center" style="font-size:0.9rem;">
+            <i class="bi bi-check-circle me-2"></i>@ViewBag.Success
+            <div class="mt-2 text-dark"><a href="/Auth/Login" class="fw-bold">Quay lại đăng nhập</a></div>
+        </div>
+    }
+    else
+    {
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger rounded-3 py-2 px-3 mb-3" style="font-size:0.9rem;">
+                <i class="bi bi-exclamation-triangle me-2"></i>@ViewBag.Error
+            </div>
+        }
+
+        <form method="post" action="/Auth/Register">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="mb-1">Tên đăng nhập *</label>
+                    <input id="username" name="username" type="text" class="form-control" placeholder="VD: nguyenvana" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="mb-1">Mật khẩu *</label>
+                    <input id="password" name="password" type="password" class="form-control" placeholder="Mật khẩu bảo mật" required />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="mb-1">Họ và tên *</label>
+                    <input id="fullName" name="fullName" type="text" class="form-control" placeholder="Nguyễn Văn A" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="mb-1">Email *</label>
+                    <input id="email" name="email" type="email" class="form-control" placeholder="abc@email.com" required />
+                </div>
+            </div>
+
+             <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="mb-1">Số điện thoại</label>
+                    <input id="phone" name="phone" type="text" class="form-control" placeholder="091xxx" />
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label class="mb-1">Tên Cơ sở / Đơn vị quản lý *</label>
+                    <input id="businessName" name="businessName" type="text" class="form-control" placeholder="Quán Phở A..." required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-login w-100">
+                <i class="bi bi-person-plus me-2"></i>Gửi Yêu Cầu Đăng Ký
+            </button>
+        </form>
+    }
+
+    <hr class="divider my-4" />
+    <p class="register-link">
+        Đã có tài khoản? <a href="/Auth/Login">Đăng nhập</a>
+    </p>
+</div>
+</body>
+</html>

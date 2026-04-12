@@ -5,19 +5,29 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:pages="clr-namespace:VinhKhanhTour.Pages"
     xmlns:local="clr-namespace:VinhKhanhTour.MarkupExtensions"
+    xmlns:fonts="clr-namespace:Fonts"
     Shell.FlyoutBehavior="Disabled"
     Title="VinhKhanhTour">
 
     <TabBar>
-        <Tab Title="{local:Translate 'Trang chủ'}" Icon="{StaticResource IconDashboard}">
+        <Tab Title="{local:Translate 'Trang chủ'}">
+            <Tab.Icon>
+                <FontImageSource FontFamily="FluentUI" Glyph="{x:Static fonts:FluentUI.home_24_regular}" />
+            </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate pages:MainPage}" Route="main" />
         </Tab>
 
-        <Tab Title="{local:Translate 'Bản đồ'}" Icon="{StaticResource IconProjects}">
+        <Tab Title="{local:Translate 'Bản đồ'}">
+             <Tab.Icon>
+                <FontImageSource FontFamily="FluentUI" Glyph="{x:Static fonts:FluentUI.map_24_regular}" />
+            </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate pages:MapPage}" Route="map" />
         </Tab>
 
-        <Tab Title="{local:Translate 'Cài đặt'}" Icon="{StaticResource IconMeta}">
+        <Tab Title="{local:Translate 'Cài đặt'}">
+             <Tab.Icon>
+                <FontImageSource FontFamily="FluentUI" Glyph="{x:Static fonts:FluentUI.settings_24_regular}" />
+            </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate pages:SettingsPage}" Route="settings" />
         </Tab>
     </TabBar>

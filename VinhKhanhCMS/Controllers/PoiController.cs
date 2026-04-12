@@ -18,41 +18,44 @@ public class PoiController : ControllerBase
         _config = config;
     }
 
-    // ✅ Lấy base URL từ config (env var API_BASE_URL khi deploy Render)
     private string GetBaseUrl() =>
         Environment.GetEnvironmentVariable("API_BASE_URL")
         ?? _config["ApiBaseUrl"]
         ?? $"{Request.Scheme}://{Request.Host}";
 
-    // 🔍 Lấy tất cả POI
+    // 🔍 Lấy tất cả POI — có thể lọc theo ?status=Pending&ownerId=5
     [HttpGet]
-    public IActionResult GetAll()
+    public IActionResult GetAll([FromQuery] string? status, [FromQuery] int? ownerId)
     {
-        var data = _context.Pois
+        var query = _context.Pois
             .Include(p => p.Translations)
-            .ToList();
+            .AsQueryable();
 
+        // Lọc theo status (Pending / Approved / Rejected)
+        if (!string.IsNullOrEmpty(status))
+            query = query.Where(p => p.Status == status);
+
+        // Lọc theo ownerId (Owner chỉ xem POI của mình)
+        if (ownerId.HasValue)
+            query = query.Where(p => p.OwnerId == ownerId.Value);
+
+        var data = query.ToList();
         var baseUrl = GetBaseUrl();
 
         foreach (var poi in data)
         {
-            // ✅ FIX IMAGE URL
             if (!string.IsNullOrEmpty(poi.ImageUrl) && !poi.ImageUrl.StartsWith("http"))
             {
-                poi.ImageUrl = baseUrl + "/images/" + poi.ImageUrl;
+                if (poi.ImageUrl.StartsWith("/"))
+                    poi.ImageUrl = baseUrl + poi.ImageUrl;
+                else
+                    poi.ImageUrl = baseUrl + "/images/" + poi.ImageUrl;
             }
 
-            // ✅ FIX AUDIO URL
             if (poi.Translations != null)
-            {
                 foreach (var t in poi.Translations)
-                {
                     if (!string.IsNullOrEmpty(t.AudioUrl) && !t.AudioUrl.StartsWith("http"))
-                    {
                         t.AudioUrl = baseUrl + t.AudioUrl;
-                    }
-                }
-            }
         }
 
         return Ok(data);
@@ -70,6 +73,19 @@ public class PoiController : ControllerBase
         return Ok(poi);
     }
 
+    // ✅ Admin duyệt / từ chối POI
+    [HttpPut("{id}/approve")]
+    public async Task<IActionResult> Approve(int id, [FromBody] ApprovePoiRequest req)
+    {
+        var poi = _context.Pois.Find(id);
+        if (poi == null) return NotFound();
+
+        poi.Status = req.Approve ? "Approved" : "Rejected";
+        if (req.Approve) poi.IsActive = true;
+        await _context.SaveChangesAsync();
+        return Ok(poi);
+    }
+
     // 🔍 Lấy 1 POI theo id
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
@@ -81,6 +97,14 @@ public class PoiController : ControllerBase
         if (poi == null) return NotFound();
 
         var baseUrl = GetBaseUrl();
+
+        if (!string.IsNullOrEmpty(poi.ImageUrl) && !poi.ImageUrl.StartsWith("http"))
+        {
+            if (poi.ImageUrl.StartsWith("/"))
+                poi.ImageUrl = baseUrl + poi.ImageUrl;
+            else
+                poi.ImageUrl = baseUrl + "/images/" + poi.ImageUrl;
+        }
 
         if (poi.Translations != null)
         {
@@ -127,6 +151,35 @@ public class PoiController : ControllerBase
 
         return Ok(poi);
     }
+    
+    // 📸 Upload Image for POI
+    [HttpPost("{id}/upload-image")]
+    public async Task<IActionResult> UploadImage(int id, IFormFile imageFile)
+    {
+        var poi = _context.Pois.Find(id);
+        if (poi == null) return NotFound();
+
+        if (imageFile == null || imageFile.Length == 0)
+            return BadRequest("No file provided");
+
+        var extension = Path.GetExtension(imageFile.FileName);
+        var filename = $"poi_{id}_{DateTime.UtcNow.Ticks}{extension}";
+        var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "pois");
+
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+
+        var filepath = Path.Combine(folder, filename);
+        using (var stream = new FileStream(filepath, FileMode.Create))
+        {
+            await imageFile.CopyToAsync(stream);
+        }
+
+        poi.ImageUrl = "/images/pois/" + filename;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { ImageUrl = poi.ImageUrl });
+    }
 
     // ❌ Xóa POI
     [HttpDelete("{id}")]
@@ -140,4 +193,9 @@ public class PoiController : ControllerBase
 
         return Ok();
     }
+}
+
+public class ApprovePoiRequest
+{
+    public bool Approve { get; set; }
 }

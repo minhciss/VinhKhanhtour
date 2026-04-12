@@ -7,99 +7,108 @@
              BackgroundColor="{AppThemeBinding Light={StaticResource LightBackground}, Dark={StaticResource DarkBackground}}">
 
     <ScrollView>
-        <VerticalStackLayout Spacing="{OnIdiom Phone=16, Tablet=24, Desktop=24}" 
-                             Padding="{OnIdiom Phone=20, Tablet=40, Desktop=80}"
-                             MaximumWidthRequest="800"
+        <VerticalStackLayout Spacing="{OnIdiom Phone=24, Tablet=32, Desktop=32}" 
+                             Padding="{OnIdiom Phone=24, Tablet=40, Desktop=80}"
+                             MaximumWidthRequest="650"
                              HorizontalOptions="Center">
             
-            <!-- 🎨 Giao diện Section -->
-            <HorizontalStackLayout Spacing="8" Margin="0,4,0,0">
-                <Label Text="🎨" FontSize="20" VerticalOptions="Center" />
-                <Label Text="{local:Translate 'Giao diện'}" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
-            </HorizontalStackLayout>
-            
-            <Border Style="{StaticResource CardStyle}">
-                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15" VerticalOptions="Center">
-                    <Label Grid.Column="0" Text="🌙" FontSize="22" VerticalOptions="Center" />
-                    <Label Grid.Column="1" Text="{local:Translate 'Chế độ Tối (Dark Mode)'}" VerticalOptions="Center" VerticalTextAlignment="Center" LineBreakMode="WordWrap" />
-                    <Switch Grid.Column="2" x:Name="ThemeSwitch" Toggled="OnThemeSwitchToggled" 
-                            HorizontalOptions="End" VerticalOptions="Center"
-                            OnColor="{StaticResource Primary}" />
-                </Grid>
-            </Border>
+            <!-- Header Section -->
+            <VerticalStackLayout Spacing="6" Margin="0,10,0,10">
+                <Label Text="{local:Translate 'Tùy chỉnh hệ thống'}" 
+                       Style="{StaticResource LargeTitle}" 
+                       TextColor="{StaticResource Primary}" />
+                <Label Text="{local:Translate 'Thiết lập trải nghiệm ứng dụng Vinh Khanh Tour'}" 
+                       Style="{StaticResource Body1}" 
+                       TextColor="{StaticResource Gray400}" />
+            </VerticalStackLayout>
 
-            <!-- 🌐 Ngôn ngữ Section -->
-            <Border Style="{StaticResource CardStyle}">
-                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15" VerticalOptions="Center">
-                    <Label Grid.Column="0" Text="🌐" FontSize="22" VerticalOptions="Center" />
-                    <Label Grid.Column="1" Text="{local:Translate 'Ngôn ngữ / Language'}" VerticalOptions="Center" VerticalTextAlignment="Center" LineBreakMode="WordWrap" />
-                    
-                    <Picker Grid.Column="2" x:Name="LanguagePicker"
-                            Title="Ngôn ngữ"
-                            WidthRequest="{OnIdiom Phone=130, Tablet=200, Desktop=200}"
-                            HorizontalOptions="End" VerticalOptions="Center"
-                            SelectedIndexChanged="OnLanguageChanged">
-                        <Picker.Items>
-                            <x:String>Tiếng Việt</x:String>
-                            <x:String>English</x:String>
-                            <x:String>Español</x:String>
-                            <x:String>Français</x:String>
-                            <x:String>Deutsch</x:String>
-                            <x:String>中文</x:String>
-                            <x:String>日本語</x:String>
-                            <x:String>한국어</x:String>
-                            <x:String>Русский</x:String>
-                            <x:String>Italiano</x:String>
-                            <x:String>Português</x:String>
-                            <x:String>हिन्दी</x:String>
-                        </Picker.Items>
-                    </Picker>
-                </Grid>
-            </Border>
+            <!-- General Settings Card -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="{local:Translate 'CÀI ĐẶT CHUNG'}" 
+                       Style="{StaticResource Caption1Strong}" 
+                       TextColor="{StaticResource Gray400}" 
+                       Margin="16,0,0,0"/>
+                
+                <Border Style="{StaticResource CardStyle}" Padding="20,16">
+                    <VerticalStackLayout Spacing="16">
+                        
+                        <!-- Dark Mode Toggle -->
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="16" VerticalOptions="Center">
+                            <Image Grid.Column="0" Source="{StaticResource IconDark}" 
+                                   WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{local:Translate 'Chế độ Tối (Dark Mode)'}" 
+                                   Style="{StaticResource Body1}" VerticalOptions="Center" />
+                            <Switch Grid.Column="2" x:Name="ThemeSwitch" Toggled="OnThemeSwitchToggled" 
+                                    HorizontalOptions="End" VerticalOptions="Center"
+                                    OnColor="{StaticResource Primary}" />
+                        </Grid>
 
-            <!-- 🔊 Âm thanh Section -->
-            <HorizontalStackLayout Spacing="8" Margin="0,8,0,0">
-                <Label Text="🔊" FontSize="20" VerticalOptions="Center" />
-                <Label Text="{local:Translate 'Âm thanh &amp; Giọng đọc'}" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                        <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" Margin="-20,0" />
 
-            <Border Style="{StaticResource CardStyle}">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="{local:Translate 'Tốc độ đọc (TTS)'}" FontAttributes="Bold" />
-                    <Slider x:Name="SpeechRateSlider" 
-                            Maximum="2.0" Minimum="0.5" Value="1.0" 
-                            ValueChanged="OnSpeechRateChanged"
-                            MinimumTrackColor="{StaticResource Primary}"
-                            MaximumTrackColor="{StaticResource Gray200}"
-                            ThumbColor="{StaticResource Primary}" />
-                    <Label x:Name="SpeechRateLabel" 
-                           Text="Bình thường (1.0x)" 
-                           FontSize="12" TextColor="{StaticResource Gray400}" 
-                           HorizontalOptions="End" />
-                </VerticalStackLayout>
-            </Border>
+                        <!-- Language Picker -->
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="16" VerticalOptions="Center">
+                            <Label Grid.Column="0" Text="🌐" FontSize="22" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{local:Translate 'Ngôn ngữ / Language'}" 
+                                   Style="{StaticResource Body1}" VerticalOptions="Center" />
+                            
+                            <Picker Grid.Column="2" x:Name="LanguagePicker"
+                                    Title="Ngôn ngữ"
+                                    WidthRequest="{OnIdiom Phone=140, Tablet=200, Desktop=200}"
+                                    HorizontalOptions="End" VerticalOptions="Center"
+                                    SelectedIndexChanged="OnLanguageChanged">
+                                <Picker.Items>
+                                    <x:String>Tiếng Việt</x:String>
+                                    <x:String>English</x:String>
+                                    <x:String>Español</x:String>
+                                    <x:String>Français</x:String>
+                                    <x:String>Deutsch</x:String>
+                                    <x:String>中文</x:String>
+                                    <x:String>日本語</x:String>
+                                    <x:String>한국어</x:String>
+                                    <x:String>Русский</x:String>
+                                    <x:String>Italiano</x:String>
+                                    <x:String>Português</x:String>
+                                    <x:String>हिन्दी</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
 
-            <!-- ℹ️ About Section -->
-            <HorizontalStackLayout Spacing="8" Margin="0,8,0,0">
-                <Label Text="ℹ️" FontSize="20" VerticalOptions="Center" />
-                <Label Text="{local:Translate 'Về ứng dụng'}" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
-            </HorizontalStackLayout>
-            
-            <Border Style="{StaticResource CardStyle}">
-                <VerticalStackLayout Spacing="8">
-                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10" VerticalOptions="Center">
-                        <Label Grid.Column="0" Text="🦀" FontSize="28" VerticalOptions="Center" />
-                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                            <Label Text="Vĩnh Khánh Tour" FontSize="18" FontAttributes="Bold" LineBreakMode="WordWrap" />
-                            <Label Text="Phiên bản 1.0.0" FontSize="12" TextColor="{StaticResource Gray400}" />
-                        </VerticalStackLayout>
-                    </Grid>
-                    <BoxView HeightRequest="1" Color="{StaticResource Gray100}" Margin="0,4" />
-                    <Label Text="{local:Translate 'Đồ án môn học — Xây dựng ứng dụng di động'}" FontSize="13" TextColor="{StaticResource Gray400}" LineBreakMode="WordWrap" />
-                    <Label Text="{local:Translate 'Thiết kế ❤️ bởi đội ngũ phát triển'}" FontSize="12" TextColor="{StaticResource Gray300}" LineBreakMode="WordWrap" />
-                </VerticalStackLayout>
-            </Border>
+            <!-- Audio Settings Card -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="{local:Translate 'NGHE VÀ THUYẾT MINH'}" 
+                       Style="{StaticResource Caption1Strong}" 
+                       TextColor="{StaticResource Gray400}" 
+                       Margin="16,0,0,0"/>
 
+                <Border Style="{StaticResource CardStyle}" Padding="20,20">
+                    <VerticalStackLayout Spacing="16">
+                        <Grid ColumnDefinitions="Auto, *" ColumnSpacing="16" VerticalOptions="Center">
+                            <Image Grid.Column="0" Source="{StaticResource IconRibbon}" 
+                                   WidthRequest="28" HeightRequest="28" VerticalOptions="Start" />
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{local:Translate 'Tốc độ giọng đọc (TTS)'}" Style="{StaticResource Body1Strong}" />
+                                <Label Text="{local:Translate 'Tùy chỉnh tốc độ của hướng dẫn viên ảo'}" Style="{StaticResource Caption1}" TextColor="{StaticResource Gray400}" Margin="0,4,0,0" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        
+                        <Slider x:Name="SpeechRateSlider" 
+                                Maximum="2.0" Minimum="0.5" Value="1.0" 
+                                ValueChanged="OnSpeechRateChanged"
+                                MinimumTrackColor="{StaticResource Primary}"
+                                MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                ThumbColor="{StaticResource Primary}" 
+                                Margin="0,10,0,0"/>
+                        
+                        <Label x:Name="SpeechRateLabel" 
+                               Text="Bình thường (1.0x)" 
+                               Style="{StaticResource Caption1Strong}" TextColor="{StaticResource Primary}" 
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 

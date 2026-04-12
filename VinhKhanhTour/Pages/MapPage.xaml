@@ -88,8 +88,8 @@
                 <HorizontalStackLayout Grid.Row="{OnIdiom Phone=1, Tablet=0, Desktop=0}" Grid.Column="{OnIdiom Phone=0, Tablet=1, Desktop=1}" Grid.ColumnSpan="{OnIdiom Phone=2, Tablet=1, Desktop=1}" 
                                        HorizontalOptions="Center" VerticalOptions="Center" Spacing="{OnIdiom Phone=24, Tablet=16, Desktop=16}" Margin="{OnIdiom Phone='0,14,0,0', Tablet='0,0,0,0', Desktop='0,0,0,0'}">
                     <Button Text="⏮" FontSize="22" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" 
-                            WidthRequest="48" HeightRequest="48"/>
-                    <Button Text="⏸" x:Name="PlayPauseButton" FontSize="28" 
+                            WidthRequest="48" HeightRequest="48" Clicked="OnPrevPoiClicked"/>
+                    <Button Text="||" FontAttributes="Bold" x:Name="PlayPauseButton" FontSize="20" 
                             BackgroundColor="{StaticResource Primary}" TextColor="White" 
                             WidthRequest="56" HeightRequest="56" CornerRadius="28" Padding="0" 
                             Clicked="OnPlayPauseClicked">
@@ -98,9 +98,102 @@
                         </Button.Shadow>
                     </Button>
                     <Button Text="⏭" FontSize="22" BackgroundColor="Transparent" TextColor="{StaticResource Primary}" 
-                            WidthRequest="48" HeightRequest="48"/>
+                            WidthRequest="48" HeightRequest="48" Clicked="OnNextPoiClicked"/>
                 </HorizontalStackLayout>
             </Grid>
+        </Border>
+
+        <!-- 🎮 Simulation Mode Panel -->
+        <Border x:Name="SimPanel"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                Margin="{OnIdiom Phone='12,120,0,0', Tablet='30,140,0,0', Desktop='40,140,0,0'}"
+                Padding="12"
+                StrokeShape="RoundRectangle 16"
+                BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                StrokeThickness="0">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.2"/>
+            </Border.Shadow>
+            <VerticalStackLayout Spacing="8">
+
+                <!-- Toggle Button -->
+                <Button x:Name="SimToggleButton"
+                        Text="🎮 Giả lập"
+                        FontSize="13"
+                        FontAttributes="Bold"
+                        BackgroundColor="#6C757D"
+                        TextColor="White"
+                        CornerRadius="10"
+                        Padding="12,6"
+                        HeightRequest="36"
+                        Clicked="OnSimToggleClicked"/>
+
+                <!-- D-Pad (chỉ hiện khi đang giả lập) -->
+                <Grid x:Name="DPadGrid" IsVisible="False"
+                      RowDefinitions="44,44,44"
+                      ColumnDefinitions="44,44,44"
+                      RowSpacing="4" ColumnSpacing="4">
+
+                    <!-- ▲ Bắc -->
+                    <Button Grid.Row="0" Grid.Column="1" Text="▲" FontSize="20"
+                            BackgroundColor="{StaticResource Primary}" TextColor="White"
+                            CornerRadius="10" Padding="0"
+                            Clicked="OnSimNorthClicked">
+                        <Button.Shadow>
+                            <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
+                        </Button.Shadow>
+                    </Button>
+
+                    <!-- ◄ Tây -->
+                    <Button Grid.Row="1" Grid.Column="0" Text="◄" FontSize="20"
+                            BackgroundColor="{StaticResource Primary}" TextColor="White"
+                            CornerRadius="10" Padding="0"
+                            Clicked="OnSimWestClicked">
+                        <Button.Shadow>
+                            <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
+                        </Button.Shadow>
+                    </Button>
+
+                    <!-- Tâm -->
+                    <Border Grid.Row="1" Grid.Column="1"
+                            StrokeShape="RoundRectangle 10" StrokeThickness="0"
+                            BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#2A2A2A}">
+                        <Label Text="⊙" FontSize="20"
+                               HorizontalOptions="Center" VerticalOptions="Center"
+                               TextColor="{StaticResource Primary}"/>
+                    </Border>
+
+                    <!-- ► Đông -->
+                    <Button Grid.Row="1" Grid.Column="2" Text="►" FontSize="20"
+                            BackgroundColor="{StaticResource Primary}" TextColor="White"
+                            CornerRadius="10" Padding="0"
+                            Clicked="OnSimEastClicked">
+                        <Button.Shadow>
+                            <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
+                        </Button.Shadow>
+                    </Button>
+
+                    <!-- ▼ Nam -->
+                    <Button Grid.Row="2" Grid.Column="1" Text="▼" FontSize="20"
+                            BackgroundColor="{StaticResource Primary}" TextColor="White"
+                            CornerRadius="10" Padding="0"
+                            Clicked="OnSimSouthClicked">
+                        <Button.Shadow>
+                            <Shadow Brush="{StaticResource Primary}" Offset="0,2" Radius="6" Opacity="0.3"/>
+                        </Button.Shadow>
+                    </Button>
+                </Grid>
+
+                <!-- Tọa độ giả lập -->
+                <Label x:Name="SimCoordLabel"
+                       Text="--"
+                       FontSize="10"
+                       HorizontalOptions="Center"
+                       IsVisible="False"
+                       TextColor="{StaticResource Primary}"
+                       FontAttributes="Bold"/>
+            </VerticalStackLayout>
         </Border>
 
     </Grid>

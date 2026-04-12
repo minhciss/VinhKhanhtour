@@ -1,0 +1,84 @@
+@model List<VinhKhanhadmin.Models.AppUser>
+
+<div class="card shadow-sm bg-white text-dark mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Quản lý Tài khoản (Owner)</h5>
+    </div>
+    
+    <div class="card-body bg-light border-bottom p-3 d-flex gap-2">
+        <a href="/Admin/UserList" class="btn btn-sm @(ViewBag.CurrentStatus == "all" ? "btn-primary" : "btn-outline-primary")">Tất cả</a>
+        <a href="/Admin/UserList?status=Pending" class="btn btn-sm @(ViewBag.CurrentStatus == "Pending" ? "btn-warning" : "btn-outline-warning")">
+            Chờ duyệt
+            @if (ViewBag.PendingOwnerCount > 0)
+            {
+                <span class="badge bg-danger ms-1">@ViewBag.PendingOwnerCount</span>
+            }
+        </a>
+        <a href="/Admin/UserList?status=Approved" class="btn btn-sm @(ViewBag.CurrentStatus == "Approved" ? "btn-success" : "btn-outline-success")">Đã duyệt</a>
+    </div>
+
+    <div class="card-body p-0 table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Username</th>
+                    <th>Họ Tên</th>
+                    <th>Cơ sở (Đơn vị)</th>
+                    <th>Liên hệ</th>
+                    <th>Trạng thái</th>
+                    <th style="width:250px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td class="fw-bold text-primary">@u.Username</td>
+                        <td>@u.FullName</td>
+                        <td><span class="badge bg-info text-dark">@u.BusinessName</span></td>
+                        <td>
+                            <small class="d-block text-muted"><i class="bi bi-envelope me-1"></i>@u.Email</small>
+                            <small class="d-block text-muted"><i class="bi bi-telephone me-1"></i>@u.Phone</small>
+                        </td>
+                        <td>
+                            @if (u.Status == "Pending")
+                            {
+                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ duyệt</span>
+                            }
+                            else if (u.Status == "Approved")
+                            {
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã duyệt</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Từ chối</span>
+                            }
+
+                            @if (!u.IsActive && u.Status == "Approved")
+                            {
+                                <span class="badge bg-secondary ms-1">Bị khóa</span>
+                            }
+                        </td>
+                        <td>
+                            @if (u.Status == "Pending")
+                            {
+                                <a href="/Admin/ApproveUser/@u.Id" class="btn btn-success btn-sm me-1"><i class="bi bi-check-lg"></i> Duyệt</a>
+                                <a href="/Admin/RejectUser/@u.Id" class="btn btn-danger btn-sm" onclick="return confirm('Từ chối tài khoản này?')"><i class="bi bi-x-lg"></i> Từ chối</a>
+                            }
+                            else if (u.Status == "Approved")
+                            {
+                                <a href="/Admin/ToggleUser/@u.Id" class="btn @(u.IsActive ? "btn-outline-secondary" : "btn-outline-success") btn-sm">
+                                    <i class="bi @(u.IsActive ? "bi-lock" : "bi-unlock")"></i> @(u.IsActive ? "Khóa" : "Mở khóa")
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">Không có tài khoản nào.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

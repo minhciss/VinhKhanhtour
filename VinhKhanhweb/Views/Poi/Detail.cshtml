@@ -1,21 +1,192 @@
-﻿@model VinhKhanhadmin.Models.Poi
+@model VinhKhanhadmin.Models.Poi
+@{
+    Layout = null;
+    var translations = ViewBag.Translations as List<VinhKhanhadmin.Models.PoiTranslation> ?? new();
+    var langs = new Dictionary<string, string>
+    {
+        {"vi", "🇻🇳 Tiếng Việt"}, {"en", "🇬🇧 English"}, {"zh", "🇨🇳 中文"},
+        {"ja", "🇯🇵 日本語"}, {"ko", "🇰🇷 한국어"}, {"fr", "🇫🇷 Français"},
+        {"de", "🇩🇪 Deutsch"}, {"es", "🇪🇸 Español"}, {"ru", "🇷🇺 Русский"},
+        {"it", "🇮🇹 Italiano"}, {"pt", "🇵🇹 Português"}, {"hi", "🇮🇳 हिन्दी"}
+    };
+    var defaultLang = translations.FirstOrDefault()?.LanguageCode ?? "vi";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>@Model?.Name – Audio Guide | Vĩnh Khánh</title>
+    <meta name="description" content="Thuyết minh tự động đa ngôn ngữ tại @Model?.Name – Phố Ẩm Thực Vĩnh Khánh Q.4" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            color: #1a202c;
+            min-height: 100svh;
+        }
+        /* ── HERO ── */
+        .hero {
+            position: relative;
+            height: 280px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            overflow: hidden;
+        }
+        .hero img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: .55;
+        }
+        .hero-overlay {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            justify-content: flex-end;
+            padding: 24px 20px 20px;
+            background: linear-gradient(to top, rgba(0,0,0,.65), transparent);
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,.2);
+            backdrop-filter: blur(6px);
+            color: #fff; font-size: 12px; font-weight: 600;
+            border-radius: 20px; padding: 4px 12px; width: fit-content;
+            margin-bottom: 8px;
+        }
+        .hero h1 { color: #fff; font-size: 26px; font-weight: 700; line-height: 1.2; }
+        .hero p  { color: rgba(255,255,255,.8); font-size: 13px; margin-top: 5px; }
 
-<h2>@Model.Name</h2>
+        /* ── CONTENT ── */
+        .content { max-width: 600px; margin: 0 auto; padding: 20px 16px 60px; }
 
-<p>@Model.Description</p>
+        /* ── LANG SELECTOR ── */
+        .lang-selector { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .lang-btn {
+            border: 2px solid #e2e8f0;
+            background: #fff; border-radius: 20px;
+            padding: 6px 14px; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: all .2s; color: #4a5568;
+        }
+        .lang-btn.active {
+            border-color: #2a5298; background: #2a5298; color: #fff;
+        }
 
-<img src="@Model.ImageUrl" style="max-width:300px" />
+        /* ── AUDIO CARD ── */
+        .audio-card {
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.08);
+            padding: 20px; margin-bottom: 16px;
+            display: none;
+        }
+        .audio-card.active { display: block; }
+        .trans-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #1e3c72; }
+        .trans-desc  { font-size: 14px; line-height: 1.7; color: #4a5568; margin-bottom: 16px; }
+        audio { width: 100%; border-radius: 8px; }
 
-<hr />
+        /* ── DESCRIPTION CARD ── */
+        .info-card {
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.08);
+            padding: 20px; margin-bottom: 16px;
+        }
+        .info-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: #2a5298; }
+        .info-card p  { font-size: 14px; color: #4a5568; line-height: 1.7; }
 
-<h3>🎧 Audio</h3>
+        /* ── FOOTER ── */
+        .footer { text-align: center; font-size: 12px; color: #a0aec0; padding: 20px; }
+        .footer a { color: #2a5298; }
 
-<audio controls>
-    <source src="http://192.168.1.11:5137/audio/yourfile.mp3" type="audio/mpeg" />
-</audio>
+        /* ── EMPTY STATE ── */
+        .empty { text-align: center; padding: 40px 20px; color: #718096; }
+        .empty i { font-size: 48px; margin-bottom: 12px; display: block; }
+    </style>
+</head>
+<body>
 
-<hr />
+<!-- HERO -->
+<div class="hero">
+    @if (!string.IsNullOrEmpty(Model?.ImageUrl))
+    {
+        <img src="@Model.ImageUrl" alt="@Model.Name" />
+    }
+    <div class="hero-overlay">
+        <div class="hero-badge"><i class="bi bi-headphones"></i> Audio Guide</div>
+        <h1>@Model?.Name</h1>
+        @if (!string.IsNullOrEmpty(Model?.Address))
+        {
+            <p><i class="bi bi-geo-alt me-1"></i>@Model.Address</p>
+        }
+    </div>
+</div>
 
-<h3>📱 QR Code</h3>
+<!-- MAIN -->
+<div class="content">
 
-<img src="/Poi/Qr?url=http://192.168.1.11:7170/Public/Poi/@Model.Id" />
+    @if (!translations.Any())
+    {
+        <div class="empty">
+            <i class="bi bi-mic-mute text-secondary"></i>
+            <p>Chưa có nội dung thuyết minh</p>
+            <small>Vui lòng quay lại sau.</small>
+        </div>
+    }
+    else
+    {
+        <!-- LANG SELECTOR -->
+        <div class="lang-selector">
+            @foreach (var t in translations)
+            {
+                var label = langs.ContainsKey(t.LanguageCode) ? langs[t.LanguageCode] : t.LanguageCode.ToUpper();
+                <button class="lang-btn @(t.LanguageCode == defaultLang ? "active" : "")"
+                        onclick="switchLang('@t.LanguageCode')">
+                    @label
+                </button>
+            }
+        </div>
+
+        <!-- AUDIO CARDS -->
+        @foreach (var t in translations)
+        {
+            <div class="audio-card @(t.LanguageCode == defaultLang ? "active" : "")" id="card-@t.LanguageCode">
+                <div class="trans-title">@t.Title</div>
+                <div class="trans-desc">@t.Description</div>
+                @if (!string.IsNullOrEmpty(t.AudioUrl))
+                {
+                    <audio controls preload="none">
+                        <source src="@t.AudioUrl" type="audio/mpeg" />
+                    </audio>
+                }
+            </div>
+        }
+    }
+
+    <!-- DESCRIPTION -->
+    @if (!string.IsNullOrEmpty(Model?.Description))
+    {
+        <div class="info-card">
+            <h3><i class="bi bi-info-circle me-1"></i>Giới thiệu</h3>
+            <p>@Model.Description</p>
+        </div>
+    }
+
+</div>
+
+<div class="footer">
+    Powered by <a href="#">Vĩnh Khánh Audio Guide</a> &copy; @DateTime.Now.Year
+</div>
+
+<script>
+    function switchLang(code) {
+        document.querySelectorAll('.audio-card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        const card = document.getElementById('card-' + code);
+        if (card) card.classList.add('active');
+        event.target.classList.add('active');
+        // Pause other audios
+        document.querySelectorAll('audio').forEach(a => { a.pause(); });
+    }
+</script>
+</body>
+</html>

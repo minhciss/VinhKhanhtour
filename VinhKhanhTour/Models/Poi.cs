@@ -164,38 +164,100 @@ namespace VinhKhanhTour.Models
                 "it" => !string.IsNullOrWhiteSpace(it) ? it : vi,
                 "pt" => !string.IsNullOrWhiteSpace(pt) ? pt : vi,
                 "hi" => !string.IsNullOrWhiteSpace(hi) ? hi : vi,
-                _ => vi
+                _    => vi
             };
+        }
+
+        /// <summary>
+        /// Thông báo cho UI cập nhật lại tất cả computed display properties khi ngôn ngữ thay đổi.
+        /// Cần gọi từ ViewModel mỗi khi LocalizationResourceManager.SetCulture() được gọi.
+        /// </summary>
+        public void RefreshDisplayProperties()
+        {
+            OnPropertyChanged(nameof(DisplayName));
+            OnPropertyChanged(nameof(DisplayDescription));
+            OnPropertyChanged(nameof(DisplayTtsScript));
+            OnPropertyChanged(nameof(DisplayDistanceText));
+            OnPropertyChanged(nameof(ListDisplayDistanceText));
+            OnPropertyChanged(nameof(DisplayImage));
+            OnPropertyChanged(nameof(DisplayRadiusText));
+            OnPropertyChanged(nameof(ListDisplayRadiusText));
         }
         public static List<Poi> GetSampleData()
         {
             return new List<Poi>
-    {
-        new Poi
-        {
-            Name = "Chợ Bến Thành",
-            NameEn = "Ben Thanh Market",
-            Description = "Khu chợ nổi tiếng tại TP.HCM",
-            DescriptionEn = "Famous market in Ho Chi Minh City",
-            Latitude = 10.772,
-            Longitude = 106.698,
-            ImageUrl = "ben_thanh.jpg",
-            Radius = 50,
-            Priority = 1
-        },
-        new Poi
-        {
-            Name = "Nhà thờ Đức Bà",
-            NameEn = "Notre-Dame Cathedral",
-            Description = "Nhà thờ cổ nổi tiếng",
-            DescriptionEn = "Historic cathedral",
-            Latitude = 10.779,
-            Longitude = 106.699,
-            ImageUrl = "duc_ba.jpg",
-            Radius = 50,
-            Priority = 2
-        }
-    };
+            {
+                new Poi
+                {
+                    Name        = "Ốc Đào",
+                    NameEn      = "Oc Dao Snail Restaurant",
+                    Description = "Quán ốc nổi tiếng tại phố Vĩnh Khánh với nhiều món ốc tươi ngon, chế biến theo phong cách Nam Bộ đặc trưng.",
+                    DescriptionEn = "Famous snail restaurant on Vinh Khanh street offering fresh snails prepared in authentic Southern Vietnamese style.",
+                    TtsScript   = "Bạn đang ở gần Ốc Đào, một trong những quán ốc nổi tiếng nhất phố Vĩnh Khánh, Quận 4. Nơi đây nức tiếng với các món ốc tươi ngon, đặc biệt là ốc len xào dừa và ốc hương nướng mỡ hành.",
+                    TtsScriptEn = "You are near Oc Dao, one of the most famous snail restaurants on Vinh Khanh food street in District 4. They are renowned for their fresh snails, especially coconut-stir-fried mud creepers and grilled scallops with spring onions.",
+                    Latitude    = 10.7560,
+                    Longitude   = 106.7015,
+                    ImageUrl    = "poi_placeholder.png",
+                    Radius      = 35,
+                    Priority    = 1
+                },
+                new Poi
+                {
+                    Name        = "Quán Ốc Len Sào Dừa Bà Hai",
+                    NameEn      = "Ba Hai Coconut Snail Restaurant",
+                    Description = "Đặc sản ốc len xào dừa thơm lừng, thu hút thực khách từ khắp nơi đến thưởng thức tại phố ẩm thực Vĩnh Khánh.",
+                    DescriptionEn = "Specialty coconut-stir-fried mud creepers, attracting food lovers from all over to this culinary street.",
+                    TtsScript   = "Bạn đang đến gần quán Ốc Len Xào Dừa Bà Hai. Đây là địa chỉ nổi tiếng với món ốc len xào dừa chuẩn vị, nước cốt dừa sánh quyện cùng hương sả gừng thoang thoảng.",
+                    TtsScriptEn = "You are approaching Ba Hai Coconut Snail Restaurant, famous for its aromatic coconut-stir-fried mud creepers with a creamy coconut sauce infused with lemongrass and ginger.",
+                    Latitude    = 10.7548,
+                    Longitude   = 106.7025,
+                    ImageUrl    = "poi_placeholder.png",
+                    Radius      = 30,
+                    Priority    = 2
+                },
+                new Poi
+                {
+                    Name        = "Lẩu Hải Sản Vĩnh Khánh",
+                    NameEn      = "Vinh Khanh Seafood Hotpot",
+                    Description = "Lẩu hải sản tươi sống với nước dùng đậm đà, là điểm đến lý tưởng cho các bữa ăn nhóm tại phố Vĩnh Khánh.",
+                    DescriptionEn = "Fresh seafood hotpot with rich broth, the ideal spot for group dining on Vinh Khanh street.",
+                    TtsScript   = "Bạn đang ở gần quán Lẩu Hải Sản Vĩnh Khánh. Quán nổi tiếng với nồi lẩu hải sản tươi ngon, thực đơn đa dạng từ tôm, cua, mực cho đến các loại ốc biển.",
+                    TtsScriptEn = "You are near Vinh Khanh Seafood Hotpot. The restaurant is known for its delicious fresh seafood hotpot with a diverse menu including shrimp, crab, squid, and various sea snails.",
+                    Latitude    = 10.7538,
+                    Longitude   = 106.7032,
+                    ImageUrl    = "poi_placeholder.png",
+                    Radius      = 35,
+                    Priority    = 3
+                },
+                new Poi
+                {
+                    Name        = "Sushi Vĩnh Khánh",
+                    NameEn      = "Vinh Khanh Sushi",
+                    Description = "Nhà hàng sushi phong cách Nhật Bản kết hợp với hải sản tươi địa phương, mang lại trải nghiệm ẩm thực độc đáo.",
+                    DescriptionEn = "Japanese-style sushi restaurant combining local fresh seafood for a unique culinary experience.",
+                    TtsScript   = "Bạn đang đến gần Sushi Vĩnh Khánh, nhà hàng kết hợp phong cách Nhật Bản với nguyên liệu hải sản tươi địa phương. Nơi đây nổi bật với các cuộn sushi sáng tạo và sashimi hải sản tươi sống.",
+                    TtsScriptEn = "You are approaching Vinh Khanh Sushi, a restaurant blending Japanese style with fresh local seafood ingredients. It stands out for its creative sushi rolls and fresh seafood sashimi.",
+                    Latitude    = 10.7528,
+                    Longitude   = 106.7040,
+                    ImageUrl    = "poi_placeholder.png",
+                    Radius      = 30,
+                    Priority    = 4
+                },
+                new Poi
+                {
+                    Name        = "Bún Bò Huế Dì Ba",
+                    NameEn      = "Di Ba Hue Beef Noodle Soup",
+                    Description = "Quán bún bò Huế chuẩn vị miền Trung, nước dùng đỏ au, thơm sả và mắm ruốc đặc trưng.",
+                    DescriptionEn = "Authentic Central Vietnamese beef noodle soup with rich reddish broth, fragrant lemongrass and shrimp paste.",
+                    TtsScript   = "Bạn đang ở gần quán Bún Bò Huế Dì Ba. Đây là địa chỉ quen thuộc của người dân Quận 4, nổi tiếng với nồi bún bò đỏ au, thơm lừng mùi sả và mắm ruốc từ sáng sớm.",
+                    TtsScriptEn = "You are near Di Ba Hue Beef Noodle Soup. This is a familiar address for District 4 residents, famous for its aromatic beef noodle soup fragrant with lemongrass and shrimp paste, served from early morning.",
+                    Latitude    = 10.7572,
+                    Longitude   = 106.7005,
+                    ImageUrl    = "poi_placeholder.png",
+                    Radius      = 30,
+                    Priority    = 5
+                },
+            };
         }
     }
    

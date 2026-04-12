@@ -15,113 +15,173 @@ public class AdminController : Controller
             ?? "http://localhost:7170";
     }
 
-    // 📌 LIST
-    public async Task<IActionResult> Index()
+    // ── Kiểm tra quyền Admin ──
+    private IActionResult? CheckAdmin()
     {
-        var data = await _http.GetFromJsonAsync<List<Poi>>("api/pois");
-        ViewBag.AdminBaseUrl = _adminBaseUrl;
-        return View(data ?? new List<Poi>());
+        if (HttpContext.Session.GetString("UserId") == null)
+            return RedirectToAction("Login", "Auth");
+        if (HttpContext.Session.GetString("Role") != "Admin")
+            return RedirectToAction("Index", "Owner");
+        return null;
     }
 
-    // 📌 CREATE
+    // ─────────────────────────────────────────
+    // INDEX — Danh sách tất cả POI
+    // ─────────────────────────────────────────
+    public async Task<IActionResult> Index(string? status)
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+
+        var url = string.IsNullOrEmpty(status) ? "api/pois" : $"api/pois?status={status}";
+        var data = await _http.GetFromJsonAsync<List<Poi>>(url) ?? new List<Poi>();
+
+        ViewBag.AdminBaseUrl = _adminBaseUrl;
+        ViewBag.CurrentStatus = status ?? "all";
+
+        var pending = await _http.GetFromJsonAsync<List<Poi>>("api/pois?status=Pending");
+        ViewBag.PendingCount = pending?.Count ?? 0;
+        ViewBag.AdminName = HttpContext.Session.GetString("FullName") ?? "Admin";
+        return View(data);
+    }
+
+    // ─────────────────────────────────────────
+    // CREATE POI
+    // ─────────────────────────────────────────
     public IActionResult Create()
     {
+        var check = CheckAdmin(); if (check != null) return check;
         return View();
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(Poi poi)
     {
+        var check = CheckAdmin(); if (check != null) return check;
+        poi.Status = "Approved";
         var res = await _http.PostAsJsonAsync("api/pois", poi);
-
-        if (res.IsSuccessStatusCode)
-            return RedirectToAction("Index");
-
-        var err = await res.Content.ReadAsStringAsync();
-        ModelState.AddModelError("", err);
+        if (res.IsSuccessStatusCode) return RedirectToAction("Index");
+        ModelState.AddModelError("", await res.Content.ReadAsStringAsync());
         return View(poi);
     }
 
-    // 📌 EDIT
+    // ─────────────────────────────────────────
+    // EDIT POI
+    // ─────────────────────────────────────────
     public async Task<IActionResult> Edit(int id)
     {
+        var check = CheckAdmin(); if (check != null) return check;
         var poi = await _http.GetFromJsonAsync<Poi>($"api/pois/{id}");
-        poi.Translations = await GetTranslations(id);
-
-        // ✅ Truyền CMS base URL để hiển thị preview ảnh
-        var cmsBaseUrl = _http.BaseAddress?.ToString()?.TrimEnd('/') ?? "http://localhost:5137";
-        ViewBag.CmsBaseUrl = cmsBaseUrl;
-
+        poi!.Translations = await GetTranslations(id);
+        ViewBag.CmsBaseUrl = _http.BaseAddress?.ToString()?.TrimEnd('/') ?? "http://localhost:5137";
         return View(poi);
     }
 
     [HttpPost]
     public async Task<IActionResult> Edit(int id, Poi poi)
     {
+        var check = CheckAdmin(); if (check != null) return check;
         await _http.PutAsJsonAsync($"api/pois/{id}", poi);
         return RedirectToAction("Index");
     }
 
-    // 📌 DELETE POI
+    // ─────────────────────────────────────────
+    // DELETE / TOGGLE POI
+    // ─────────────────────────────────────────
     public async Task<IActionResult> Delete(int id)
     {
-        var res = await _http.DeleteAsync($"api/pois/{id}");
-
-        if (!res.IsSuccessStatusCode)
-        {
-            var err = await res.Content.ReadAsStringAsync();
-            return Content("Lỗi xóa: " + err);
-        }
-
+        var check = CheckAdmin(); if (check != null) return check;
+        await _http.DeleteAsync($"api/pois/{id}");
         return RedirectToAction("Index");
     }
 
-    // 📌 TOGGLE ACTIVE
     public async Task<IActionResult> Toggle(int id)
     {
+        var check = CheckAdmin(); if (check != null) return check;
         await _http.PutAsync($"api/pois/{id}/toggle", null);
         return RedirectToAction("Index");
     }
 
-    // ===========================
-    // 🔥 TRANSLATION SECTION
-    // ===========================
+    // ─────────────────────────────────────────
+    // APPROVE / REJECT POI
+    // ─────────────────────────────────────────
+    public async Task<IActionResult> ApprovePoi(int id)
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+        await _http.PutAsJsonAsync($"api/pois/{id}/approve", new { approve = true });
+        return RedirectToAction("Index", new { status = "Pending" });
+    }
 
-    // 📌 GENERATE TRANSLATION
+    public async Task<IActionResult> RejectPoi(int id)
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+        await _http.PutAsJsonAsync($"api/pois/{id}/approve", new { approve = false });
+        return RedirectToAction("Index", new { status = "Pending" });
+    }
+
+    // ─────────────────────────────────────────
+    // USER MANAGEMENT
+    // ─────────────────────────────────────────
+    public async Task<IActionResult> UserList(string? status)
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+
+        var url = "api/auth/users?role=Owner";
+        if (!string.IsNullOrEmpty(status)) url += $"&status={status}";
+
+        var users = await _http.GetFromJsonAsync<List<AppUser>>(url) ?? new List<AppUser>();
+        ViewBag.CurrentStatus = status ?? "all";
+        ViewBag.AdminName = HttpContext.Session.GetString("FullName") ?? "Admin";
+
+        var pending = await _http.GetFromJsonAsync<List<AppUser>>("api/auth/users?role=Owner&status=Pending");
+        ViewBag.PendingOwnerCount = pending?.Count ?? 0;
+        return View(users);
+    }
+
+    public async Task<IActionResult> ApproveUser(int id)
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+        await _http.PutAsJsonAsync($"api/auth/users/{id}/approve", new { approve = true });
+        return RedirectToAction("UserList", new { status = "Pending" });
+    }
+
+    public async Task<IActionResult> RejectUser(int id)
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+        await _http.PutAsJsonAsync($"api/auth/users/{id}/approve", new { approve = false });
+        return RedirectToAction("UserList", new { status = "Pending" });
+    }
+
+    public async Task<IActionResult> ToggleUser(int id)
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+        await _http.PutAsync($"api/auth/users/{id}/toggle", null);
+        return RedirectToAction("UserList");
+    }
+
+    // ─────────────────────────────────────────
+    // TRANSLATION SECTION
+    // ─────────────────────────────────────────
     [HttpPost]
     public async Task<IActionResult> GenerateTranslation(int id)
     {
+        var check = CheckAdmin(); if (check != null) return check;
         var poi = await _http.GetFromJsonAsync<Poi>($"api/pois/{id}");
-
-        var data = new
-        {
-            PoiId = id,
-            Title = poi.Name,
-            Description = poi.Description
-        };
-
-        var res = await _http.PostAsJsonAsync(
-            $"api/pois/{id}/translations/generate", data);
-
+        var data = new { PoiId = id, Title = poi!.Name, Description = poi.Description };
+        var res = await _http.PostAsJsonAsync($"api/pois/{id}/translations/generate", data);
         if (!res.IsSuccessStatusCode)
-        {
-            var err = await res.Content.ReadAsStringAsync();
-            return Content("Lỗi: " + err);
-        }
-
+            return Content("Lỗi: " + await res.Content.ReadAsStringAsync());
         return RedirectToAction("Edit", new { id });
     }
 
-    // 📌 GET TRANSLATIONS
     public async Task<List<PoiTranslation>> GetTranslations(int id)
     {
         return await _http.GetFromJsonAsync<List<PoiTranslation>>(
             $"api/pois/{id}/translations") ?? new List<PoiTranslation>();
     }
 
-    // 📌 DELETE TRANSLATION
     public async Task<IActionResult> DeleteTranslation(int poiId, int id)
     {
+        var check = CheckAdmin(); if (check != null) return check;
         await _http.DeleteAsync($"api/pois/{poiId}/translations/{id}");
         return RedirectToAction("Edit", new { id = poiId });
     }

@@ -5,7 +5,6 @@
              xmlns:pageModels="clr-namespace:VinhKhanhTour.PageModels"
              xmlns:local="clr-namespace:VinhKhanhTour.MarkupExtensions"
              x:Class="VinhKhanhTour.Pages.MainPage"
-             Title="{local:Translate 'Khám phá Ẩm thực'}"
              BackgroundColor="{AppThemeBinding Light={StaticResource LightBackground}, Dark={StaticResource DarkBackground}}">
 
     <Grid>
@@ -28,9 +27,8 @@
                     </BoxView>
                     
                     <VerticalStackLayout VerticalOptions="End" Padding="24,24,24,28">
-                        <Label Text="🦀" FontSize="36" Margin="0,0,0,4" />
                         <Label Text="Vĩnh Khánh" FontSize="40" FontAttributes="Bold" TextColor="White" />
-                        <Label Text="{local:Translate 'Thiên đường Ốc Sài Gòn — Quận 4'}" FontSize="16" TextColor="#E0E0E0" Margin="0,4,0,0" />
+                        <Label Text="{local:Translate 'Trải nghiệm ẩm thực - Quận 4'}" FontSize="16" TextColor="#E0E0E0" Margin="0,4,0,0" />
                     </VerticalStackLayout>
                 </Grid>
 
@@ -56,42 +54,23 @@
                     </Border>
 
                     <!-- 🏷️ Filter Chips -->
-                    <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-                        <HorizontalStackLayout Spacing="10">
-                            <Button Text="{local:Translate '🔥 Tất cả'}" 
-                                    Style="{StaticResource FilterButtonStyle}" 
-                                    Command="{Binding FilterCommand}" CommandParameter="{local:Translate 'Tất cả'}"/>
-                            <Button Text="{local:Translate '🐚 Ốc &amp; Hải sản'}" 
-                                    Style="{StaticResource FilterButtonStyleSecondary}" 
-                                    Command="{Binding FilterCommand}" CommandParameter="{local:Translate 'Ốc &amp; Hải sản'}"/>
-                            <Button Text="{local:Translate '🍖 Đồ nướng'}" 
-                                    Style="{StaticResource FilterButtonStyleSecondary}" 
-                                    Command="{Binding FilterCommand}" CommandParameter="{local:Translate 'Đồ nướng'}"/>
-                            <Button Text="{local:Translate '🍜 Món nước'}" 
-                                    Style="{StaticResource FilterButtonStyleSecondary}" 
-                                    Command="{Binding FilterCommand}" CommandParameter="{local:Translate 'Món nước'}"/>
-                            <Button Text="{local:Translate '🍣 Sushi'}" 
-                                    Style="{StaticResource FilterButtonStyleSecondary}" 
-                                    Command="{Binding FilterCommand}" CommandParameter="{local:Translate 'Sushi'}"/>
-                        </HorizontalStackLayout>
-                    </ScrollView>
+                  
 
                     <!-- 🚀 Start Tour CTA Button -->
                     <Border StrokeShape="RoundRectangle 28" StrokeThickness="0" Padding="0" HeightRequest="56">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Color="#FF6B35" Offset="0.0" />
-                                <GradientStop Color="#FF8F5E" Offset="1.0" />
+                                <GradientStop Color="#B71C1C" Offset="0.0" />
+                                <GradientStop Color="#D32F2F" Offset="1.0" />
                             </LinearGradientBrush>
                         </Border.Background>
                         <Border.Shadow>
-                            <Shadow Brush="#FF6B35" Opacity="0.3" Offset="0,6" Radius="16" />
+                            <Shadow Brush="#B71C1C" Opacity="0.3" Offset="0,6" Radius="16" />
                         </Border.Shadow>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding StartTourCommand}" />
                         </Border.GestureRecognizers>
                         <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="10">
-                            <Label Text="🗺️" FontSize="22" VerticalOptions="Center" />
                             <Label Text="{local:Translate 'Bắt Đầu Tour Ngay'}" FontSize="18" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
                             <Label Text="→" FontSize="22" TextColor="White" VerticalOptions="Center" />
                         </HorizontalStackLayout>
@@ -285,12 +264,12 @@
                                 HeightRequest="56">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#4A90E2" Offset="0.0" />
-                                    <GradientStop Color="#007AFF" Offset="1.0" />
+                                    <GradientStop Color="#424242" Offset="0.0" />
+                                    <GradientStop Color="#616161" Offset="1.0" />
                                 </LinearGradientBrush>
                             </Border.Background>
                             <Border.Shadow>
-                                <Shadow Brush="#007AFF" Opacity="0.3" Offset="0,6" Radius="16" />
+                                <Shadow Brush="#424242" Opacity="0.3" Offset="0,6" Radius="16" />
                             </Border.Shadow>
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding PlayNarrationCommand}" />
@@ -309,12 +288,12 @@
                                 HeightRequest="56">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#FF6B35" Offset="0.0" />
-                                    <GradientStop Color="#FF8F5E" Offset="1.0" />
+                                    <GradientStop Color="#B71C1C" Offset="0.0" />
+                                    <GradientStop Color="#D32F2F" Offset="1.0" />
                                 </LinearGradientBrush>
                             </Border.Background>
                             <Border.Shadow>
-                                <Shadow Brush="#FF6B35" Opacity="0.3" Offset="0,6" Radius="16" />
+                                <Shadow Brush="#B71C1C" Opacity="0.3" Offset="0,6" Radius="16" />
                             </Border.Shadow>
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding NavigateToMapCommand}" />

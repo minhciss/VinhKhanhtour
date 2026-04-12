@@ -72,17 +72,8 @@ public partial class SettingsPage : ContentPage
         // Lưu cài đặt vào Preferences
         Preferences.Default.Set("AppLanguage", selectedLang);
         
-        // Chỉnh sửa runtime
+        // Đổi ngôn ngữ runtime — {local:Translate} bindings và POI sẽ cập nhật ngay
         Services.LocalizationResourceManager.Instance.SetCulture(new System.Globalization.CultureInfo(cultureString));
-
-        // Buộc tải lại toàn bộ Ứng dụng để Áp dụng Ngôn ngữ mới trọn vẹn
-        if (Application.Current != null)
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                Application.Current.MainPage = new AppShell();
-            });
-        }
     }
 
     private void OnThemeSwitchToggled(object sender, ToggledEventArgs e)

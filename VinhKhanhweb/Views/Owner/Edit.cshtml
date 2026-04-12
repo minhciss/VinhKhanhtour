@@ -1,0 +1,131 @@
+@{
+    Layout = "_OwnerLayout";
+}
+@model VinhKhanhadmin.Models.Poi
+
+<div class="row">
+    <!-- CỘT 1: SỬA THÔNG TIN -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary fw-bold"><i class="bi bi-pencil-square me-2"></i>Sửa thông tin POI</h5>
+                @if (Model.Status == "Pending")
+                {
+                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ Admin duyệt</span>
+                }
+                else if (Model.Status == "Rejected")
+                {
+                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Từ chối</span>
+                }
+                else
+                {
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã duyệt</span>
+                }
+            </div>
+            
+            <form method="post" action="/Owner/Edit/@Model.Id" enctype="multipart/form-data" class="card-body p-4">
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="mb-3 text-center">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" alt="Hình ảnh" class="img-fluid rounded mb-2" style="max-height: 200px; object-fit: contain;" />
+                    }
+                    <input type="file" name="imageFile" accept="image/*" class="form-control mt-2" />
+                    <small class="text-muted">Chọn ảnh mới nếu muốn thay đổi ảnh đại diện (Tối ưu: 800x600 px)</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tên</label>
+                    <input asp-for="Name" class="form-control" required />
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Địa chỉ</label>
+                    <input asp-for="Address" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Mô tả (Nội dung thuyết minh)</label>
+                    <textarea asp-for="Description" class="form-control" rows="8" required></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Latitude</label>
+                        <input asp-for="Latitude" class="form-control" required type="number" step="0.0000001" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Longitude</label>
+                        <input asp-for="Longitude" class="form-control" required type="number" step="0.0000001" />
+                    </div>
+                </div>
+
+                <!-- Ẩn IsActive vì Owner không được tự quyết định (do Admin duyệt) -->
+                <input type="hidden" asp-for="IsActive" />
+
+                <hr class="my-4" />
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Lưu thay đổi</button>
+                    <a href="/Owner" class="btn btn-light border">Quay lại</a>
+                </div>
+                <small class="d-block text-muted mt-3"><i class="bi bi-info-circle me-1"></i>Mọi thay đổi sẽ yêu cầu Admin phê duyệt lại để hiển thị.</small>
+            </form>
+        </div>
+    </div>
+
+    <!-- CỘT 2: AUDIO & THUYẾT MINH -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-success fw-bold"><i class="bi bi-soundwave me-2"></i>Thuyết minh (Audio)</h5>
+                
+                <form action="/Owner/GenerateTranslation/@Model.Id" method="post" onsubmit="return confirm('Tạo lại Audio sẽ xóa các bản dịch cũ và tốn khoảng vài phút. Bạn chắc chứ?')">
+                    <button type="submit" class="btn btn-success btn-sm fw-bold">
+                        <i class="bi bi-robot me-1"></i>AI Tự động tạo Audio
+                    </button>
+                </form>
+            </div>
+
+            <div class="card-body p-4 bg-light">
+                @if (Model.Translations == null || !Model.Translations.Any())
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-mic-mute display-1 mb-3 d-block text-black-50"></i>
+                        <h5>Chưa có file Audio nào</h5>
+                        <p>Bấm nút "AI Tự động tạo Audio" ở góc trên để hệ thống dịch mô tả của bạn ra 12 ngôn ngữ và chuyển thành giọng đọc.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var t in Model.Translations)
+                        {
+                            <div class="col-md-6">
+                                <div class="bg-white p-3 rounded-3 shadow-sm border">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-2" style="width:35px; height:35px; font-size:14px; text-transform:uppercase;">
+                                            @t.LanguageCode
+                                        </div>
+                                        <h6 class="mb-0 fw-bold text-truncate flex-grow-1" title="@t.Title">@t.Title</h6>
+                                    </div>
+                                    <audio controls class="w-100 mt-2" style="height: 35px;">
+                                        <source src="@t.AudioUrl" type="audio/mpeg">
+                                    </audio>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <form action="/Owner/UploadTranslationAudio" method="post" enctype="multipart/form-data" class="d-flex w-100 gap-1 align-items-center">
+                                            <input type="hidden" name="id" value="@Model.Id" />
+                                            <input type="hidden" name="langCode" value="@t.LanguageCode" />
+                                            <input type="file" name="audioFile" accept="audio/*" class="form-control form-control-sm text-muted" style="font-size: 11px;" required />
+                                            <button type="submit" class="btn btn-sm btn-outline-primary" style="font-size: 11px;" title="Tải file audio thủ công"><i class="bi bi-upload"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
