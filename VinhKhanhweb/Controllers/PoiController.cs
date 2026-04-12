@@ -16,12 +16,52 @@ public class PoiController : Controller
 
     public async Task<IActionResult> Detail(int id)
     {
-        var poi = await _http.GetFromJsonAsync<Poi>($"api/pois/{id}");
-        var trans = await _http.GetFromJsonAsync<List<PoiTranslation>>(
-            $"api/pois/{id}/translations");
+        Poi? poi = null;
+        List<PoiTranslation>? trans = null;
 
-        ViewBag.Translations = trans;
+        // Thử tối đa 3 lần nếu gặp 429 Too Many Requests
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            try
+            {
+                if (attempt > 0)
+                    await Task.Delay(1500 * attempt); // Chờ 1.5s, 3s giữa các lần retry
 
+                var poiResp = await _http.GetAsync($"api/pois/{id}");
+                if (poiResp.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    if (attempt < 2) continue; // Thử lại
+                    break;
+                }
+                poiResp.EnsureSuccessStatusCode();
+                poi = await poiResp.Content.ReadFromJsonAsync<Poi>();
+
+                var transResp = await _http.GetAsync($"api/pois/{id}/translations");
+                if (transResp.IsSuccessStatusCode)
+                    trans = await transResp.Content.ReadFromJsonAsync<List<PoiTranslation>>();
+
+                break; // Thành công, thoát vòng lặp
+            }
+            catch (Exception ex) when (attempt < 2)
+            {
+                // Thử lại
+                continue;
+            }
+            catch
+            {
+                // Thất bại hoàn toàn — hiển thị trang lỗi thân thiện
+                ViewBag.Translations = new List<PoiTranslation>();
+                return View(new Poi { Name = "Không thể tải dữ liệu", Description = "Hệ thống đang bận, vui lòng thử lại sau vài giây." });
+            }
+        }
+
+        if (poi == null)
+        {
+            ViewBag.Translations = new List<PoiTranslation>();
+            return View(new Poi { Name = "Không thể tải dữ liệu", Description = "Hệ thống đang bận, vui lòng thử lại sau vài giây." });
+        }
+
+        ViewBag.Translations = trans ?? new List<PoiTranslation>();
         return View(poi);
     }
 
