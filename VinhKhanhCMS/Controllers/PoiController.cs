@@ -146,7 +146,7 @@ public class PoiController : ControllerBase
         poi.Latitude = updated.Latitude;
         poi.Longitude = updated.Longitude;
         poi.ImageUrl = updated.ImageUrl;
-        poi.IsActive = updated.IsActive;
+        // ⚠️ IsActive và Status chỉ được Admin thay đổi — không cập nhật từ body
         _context.SaveChanges();
 
         return Ok(poi);

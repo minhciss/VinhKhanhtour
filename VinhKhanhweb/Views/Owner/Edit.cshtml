@@ -61,8 +61,10 @@
                     </div>
                 </div>
 
-                <!-- Ẩn IsActive vì Owner không được tự quyết định (do Admin duyệt) -->
+                <!-- Giữ lại Status và OwnerId — Owner không được tự thay đổi -->
                 <input type="hidden" asp-for="IsActive" />
+                <input type="hidden" asp-for="Status" />
+                <input type="hidden" asp-for="OwnerId" />
 
                 <hr class="my-4" />
                 <div class="d-flex gap-2">

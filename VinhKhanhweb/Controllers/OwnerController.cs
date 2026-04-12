@@ -28,13 +28,23 @@ public class OwnerController : Controller
     // ─────────────────────────────────────
     // INDEX — Danh sách POI của Owner này
     // ─────────────────────────────────────
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         var check = CheckOwner(); if (check != null) return check;
         var ownerId = GetOwnerId();
 
-        var data = await _http.GetFromJsonAsync<List<Poi>>($"api/pois?ownerId={ownerId}")
+        List<Poi> data;
+        try
+        {
+            data = await _http.GetFromJsonAsync<List<Poi>>($"api/pois?ownerId={ownerId}")
                    ?? new List<Poi>();
+        }
+        catch
+        {
+            data = new List<Poi>();
+            TempData["Error"] = "Không thể tải danh sách POI. Vui lòng thử lại sau.";
+        }
 
         ViewBag.OwnerName = HttpContext.Session.GetString("FullName") ?? "Owner";
         ViewBag.CmsBaseUrl = _cmsBaseUrl;
@@ -44,6 +54,7 @@ public class OwnerController : Controller
     // ─────────────────────────────────────
     // CREATE
     // ─────────────────────────────────────
+    [HttpGet]
     public IActionResult Create()
     {
         var check = CheckOwner(); if (check != null) return check;
@@ -73,6 +84,7 @@ public class OwnerController : Controller
     // ─────────────────────────────────────
     // EDIT — chỉ được sửa POI của mình
     // ─────────────────────────────────────
+    [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
         var check = CheckOwner(); if (check != null) return check;
@@ -84,6 +96,7 @@ public class OwnerController : Controller
         poi.Translations = await _http.GetFromJsonAsync<List<PoiTranslation>>(
             $"api/pois/{id}/translations") ?? new List<PoiTranslation>();
 
+        ViewBag.OwnerName = HttpContext.Session.GetString("FullName") ?? "Owner";
         ViewBag.CmsBaseUrl = _cmsBaseUrl;
         return View(poi);
     }
@@ -128,6 +141,7 @@ public class OwnerController : Controller
     // ─────────────────────────────────────
     // DELETE — chỉ xóa POI của mình
     // ─────────────────────────────────────
+    [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
         var check = CheckOwner(); if (check != null) return check;
@@ -200,6 +214,7 @@ public class OwnerController : Controller
     {
         var check = CheckOwner(); if (check != null) return check;
         var ownerId = GetOwnerId();
+        ViewBag.OwnerName = HttpContext.Session.GetString("FullName") ?? "Owner";
 
         var pois = await _http.GetFromJsonAsync<List<Poi>>($"api/pois?ownerId={ownerId}") ?? new List<Poi>();
         
