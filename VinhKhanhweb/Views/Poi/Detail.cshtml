@@ -2,12 +2,15 @@
 @{
     Layout = null;
     var translations = ViewBag.Translations as List<VinhKhanhadmin.Models.PoiTranslation> ?? new();
+    bool hasAccess   = ViewBag.HasAccess == true;
+    string sessionKey = ViewBag.SessionKey ?? "";
+    int poiId = Model?.Id ?? 0;
+
     var langs = new Dictionary<string, string>
     {
-        {"vi", "🇻🇳 Tiếng Việt"}, {"en", "🇬🇧 English"}, {"zh", "🇨🇳 中文"},
-        {"ja", "🇯🇵 日本語"}, {"ko", "🇰🇷 한국어"}, {"fr", "🇫🇷 Français"},
-        {"de", "🇩🇪 Deutsch"}, {"es", "🇪🇸 Español"}, {"ru", "🇷🇺 Русский"},
-        {"it", "🇮🇹 Italiano"}, {"pt", "🇵🇹 Português"}, {"hi", "🇮🇳 हिन्दी"}
+        {"vi","🇻🇳 Tiếng Việt"},{"en","🇬🇧 English"},{"zh","🇨🇳 中文"},
+        {"ja","🇯🇵 日本語"},{"ko","🇰🇷 한국어"},{"fr","🇫🇷 Français"},
+        {"de","🇩🇪 Deutsch"},{"es","🇪🇸 Español"},{"it","🇮🇹 Italiano"}
     };
     var defaultLang = translations.FirstOrDefault()?.LanguageCode ?? "vi";
 }
@@ -17,90 +20,73 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <title>@Model?.Name – Audio Guide | Vĩnh Khánh</title>
-    <meta name="description" content="Thuyết minh tự động đa ngôn ngữ tại @Model?.Name – Phố Ẩm Thực Vĩnh Khánh Q.4" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f0f4f8;
-            color: #1a202c;
-            min-height: 100svh;
-        }
-        /* ── HERO ── */
-        .hero {
-            position: relative;
-            height: 280px;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            overflow: hidden;
-        }
-        .hero img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            opacity: .55;
-        }
-        .hero-overlay {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            justify-content: flex-end;
-            padding: 24px 20px 20px;
-            background: linear-gradient(to top, rgba(0,0,0,.65), transparent);
-        }
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,.2);
-            backdrop-filter: blur(6px);
-            color: #fff; font-size: 12px; font-weight: 600;
-            border-radius: 20px; padding: 4px 12px; width: fit-content;
-            margin-bottom: 8px;
-        }
-        .hero h1 { color: #fff; font-size: 26px; font-weight: 700; line-height: 1.2; }
-        .hero p  { color: rgba(255,255,255,.8); font-size: 13px; margin-top: 5px; }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter',sans-serif;background:#f0f4f8;color:#1a202c;min-height:100svh}
 
-        /* ── CONTENT ── */
-        .content { max-width: 600px; margin: 0 auto; padding: 20px 16px 60px; }
+        /* HERO */
+        .hero{position:relative;height:260px;background:linear-gradient(135deg,#1e3c72,#2a5298);overflow:hidden}
+        .hero img{width:100%;height:100%;object-fit:cover;opacity:.55}
+        .hero-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
+            padding:24px 20px 20px;background:linear-gradient(to top,rgba(0,0,0,.65),transparent)}
+        .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.2);
+            backdrop-filter:blur(6px);color:#fff;font-size:12px;font-weight:600;border-radius:20px;
+            padding:4px 12px;width:fit-content;margin-bottom:8px}
+        .hero h1{color:#fff;font-size:24px;font-weight:700;line-height:1.2}
+        .hero p{color:rgba(255,255,255,.8);font-size:13px;margin-top:5px}
 
-        /* ── LANG SELECTOR ── */
-        .lang-selector { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-        .lang-btn {
-            border: 2px solid #e2e8f0;
-            background: #fff; border-radius: 20px;
-            padding: 6px 14px; font-size: 13px; font-weight: 500;
-            cursor: pointer; transition: all .2s; color: #4a5568;
-        }
-        .lang-btn.active {
-            border-color: #2a5298; background: #2a5298; color: #fff;
-        }
+        .content{max-width:600px;margin:0 auto;padding:20px 16px 60px}
 
-        /* ── AUDIO CARD ── */
-        .audio-card {
-            background: #fff; border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.08);
-            padding: 20px; margin-bottom: 16px;
-            display: none;
-        }
-        .audio-card.active { display: block; }
-        .trans-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #1e3c72; }
-        .trans-desc  { font-size: 14px; line-height: 1.7; color: #4a5568; margin-bottom: 16px; }
-        audio { width: 100%; border-radius: 8px; }
+        /* PAYWALL */
+        .paywall{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.1);
+            padding:28px 20px;text-align:center;margin-bottom:16px}
+        .paywall-icon{font-size:52px;margin-bottom:12px}
+        .paywall h2{font-size:20px;font-weight:700;margin-bottom:8px;color:#1e3c72}
+        .paywall p{font-size:14px;color:#718096;line-height:1.7;margin-bottom:20px}
+        .price-row{display:flex;gap:12px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+        .price-card{border:2px solid #e2e8f0;border-radius:14px;padding:14px 18px;cursor:pointer;
+            transition:.2s;flex:1;min-width:130px;max-width:160px}
+        .price-card.selected{border-color:#2a5298;background:#eef2ff}
+        .price-card .amount{font-size:20px;font-weight:700;color:#2a5298}
+        .price-card .label{font-size:12px;color:#718096;margin-top:2px}
+        .btn-pay{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;border:none;
+            border-radius:14px;padding:14px 32px;font-size:16px;font-weight:700;width:100%;
+            cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+        .btn-pay:hover{opacity:.9;transform:translateY(-1px)}
+        .demo-note{font-size:11px;color:#a0aec0;margin-top:10px}
 
-        /* ── DESCRIPTION CARD ── */
-        .info-card {
-            background: #fff; border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.08);
-            padding: 20px; margin-bottom: 16px;
-        }
-        .info-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: #2a5298; }
-        .info-card p  { font-size: 14px; color: #4a5568; line-height: 1.7; }
+        /* PREVIEW */
+        .preview-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);
+            padding:16px;margin-bottom:16px;position:relative;overflow:hidden}
+        .preview-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;
+            background:linear-gradient(to top,rgba(255,255,255,1),transparent)}
+        .preview-blur{filter:blur(3px);pointer-events:none;user-select:none;opacity:.5}
+        audio.blurred{filter:blur(4px);pointer-events:none}
 
-        /* ── FOOTER ── */
-        .footer { text-align: center; font-size: 12px; color: #a0aec0; padding: 20px; }
-        .footer a { color: #2a5298; }
+        /* AUDIO CARD */
+        .lang-selector{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .lang-btn{border:2px solid #e2e8f0;background:#fff;border-radius:20px;padding:6px 14px;
+            font-size:13px;font-weight:500;cursor:pointer;transition:.2s;color:#4a5568}
+        .lang-btn.active{border-color:#2a5298;background:#2a5298;color:#fff}
+        .audio-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);
+            padding:20px;margin-bottom:16px;display:none}
+        .audio-card.active{display:block}
+        .trans-title{font-size:18px;font-weight:700;margin-bottom:8px;color:#1e3c72}
+        .trans-desc{font-size:14px;line-height:1.7;color:#4a5568;margin-bottom:14px}
+        audio{width:100%;border-radius:8px}
 
-        /* ── EMPTY STATE ── */
-        .empty { text-align: center; padding: 40px 20px; color: #718096; }
-        .empty i { font-size: 48px; margin-bottom: 12px; display: block; }
+        .info-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);
+            padding:20px;margin-bottom:16px}
+        .info-card h3{font-size:15px;font-weight:700;margin-bottom:8px;color:#2a5298}
+        .info-card p{font-size:14px;color:#4a5568;line-height:1.7}
+        .footer{text-align:center;font-size:12px;color:#a0aec0;padding:20px}
+        .footer a{color:#2a5298}
+
+        /* Unlock badge */
+        .unlock-badge{background:#d1fae5;color:#065f46;border-radius:12px;padding:8px 16px;
+            font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-bottom:16px}
     </style>
 </head>
 <body>
@@ -121,71 +107,174 @@
     </div>
 </div>
 
-<!-- MAIN -->
 <div class="content">
 
-    @if (!translations.Any())
+    @if (!hasAccess)
     {
-        <div class="empty">
-            <i class="bi bi-mic-mute text-secondary"></i>
-            <p>Chưa có nội dung thuyết minh</p>
-            <small>Vui lòng quay lại sau.</small>
-        </div>
-    }
-    else
-    {
-        <!-- LANG SELECTOR -->
-        <div class="lang-selector">
-            @foreach (var t in translations)
+        <!-- ===== PAYWALL ===== -->
+        <div class="paywall">
+            <div class="paywall-icon">🎧</div>
+            <h2>Nghe thuyết minh tại đây</h2>
+            <p>Mua vé để nghe hướng dẫn thuyết minh đa ngôn ngữ<br/>tại <strong>@Model?.Name</strong></p>
+
+            <!-- Xem trước 10 giây -->
+            @if (translations.Any() && !string.IsNullOrEmpty(translations[0].AudioUrl))
             {
-                var label = langs.ContainsKey(t.LanguageCode) ? langs[t.LanguageCode] : t.LanguageCode.ToUpper();
-                <button class="lang-btn @(t.LanguageCode == defaultLang ? "active" : "")"
-                        onclick="switchLang('@t.LanguageCode')">
-                    @label
-                </button>
+                <div style="margin-bottom:16px;">
+                    <p style="font-size:12px;color:#718096;margin-bottom:6px;">🎵 Nghe thử 10 giây đầu:</p>
+                    <audio controls style="width:100%;border-radius:8px;"
+                           onended="this.currentTime=0"
+                           id="previewAudio">
+                        <source src="@translations[0].AudioUrl" type="audio/mpeg" />
+                    </audio>
+                </div>
             }
+
+            <!-- Chọn gói -->
+            <div class="price-row">
+                <div class="price-card selected" id="pkg-single" onclick="selectPkg('single')">
+                    <div class="amount">5.000đ</div>
+                    <div class="label">1 địa điểm<br/>24 giờ</div>
+                </div>
+                <div class="price-card" id="pkg-day" onclick="selectPkg('day')">
+                    <div class="amount">20.000đ</div>
+                    <div class="label">Tất cả POI<br/>24 giờ</div>
+                </div>
+            </div>
+
+            <button class="btn-pay" onclick="doPay()">
+                <i class="bi bi-shield-check"></i>
+                Thanh toán & Nghe ngay
+            </button>
+            <div class="demo-note">⚠️ Đây là thanh toán giả lập cho mục đích trình bày đồ án</div>
         </div>
 
-        <!-- AUDIO CARDS -->
-        @foreach (var t in translations)
+        <!-- Mô tả mờ để khách thấy còn nội dung -->
+        @if (!string.IsNullOrEmpty(Model?.Description))
         {
-            <div class="audio-card @(t.LanguageCode == defaultLang ? "active" : "")" id="card-@t.LanguageCode">
-                <div class="trans-title">@t.Title</div>
-                <div class="trans-desc">@t.Description</div>
-                @if (!string.IsNullOrEmpty(t.AudioUrl))
-                {
-                    <audio controls preload="none">
-                        <source src="@t.AudioUrl" type="audio/mpeg" />
-                    </audio>
-                }
+            <div class="info-card">
+                <h3><i class="bi bi-info-circle me-1"></i>Giới thiệu</h3>
+                <div class="preview-blur">
+                    <p>@Model.Description</p>
+                </div>
             </div>
         }
     }
-
-    <!-- DESCRIPTION -->
-    @if (!string.IsNullOrEmpty(Model?.Description))
+    else
     {
-        <div class="info-card">
-            <h3><i class="bi bi-info-circle me-1"></i>Giới thiệu</h3>
-            <p>@Model.Description</p>
+        <!-- ===== ĐÃ THANH TOÁN → HIỆN AUDIO ===== -->
+        <div class="unlock-badge">
+            <i class="bi bi-check-circle-fill"></i> Đã mở khóa – Thuyết minh đầy đủ
         </div>
+
+        @if (!translations.Any())
+        {
+            <div style="text-align:center;padding:40px 20px;color:#718096">
+                <i class="bi bi-mic-mute" style="font-size:48px;display:block;margin-bottom:12px"></i>
+                <p>Chưa có nội dung thuyết minh</p>
+            </div>
+        }
+        else
+        {
+            <div class="lang-selector">
+                @foreach (var t in translations)
+                {
+                    var label = langs.ContainsKey(t.LanguageCode) ? langs[t.LanguageCode] : t.LanguageCode.ToUpper();
+                    <button class="lang-btn @(t.LanguageCode == defaultLang ? "active" : "")"
+                            onclick="switchLang('@t.LanguageCode', event)">
+                        @label
+                    </button>
+                }
+            </div>
+
+            @foreach (var t in translations)
+            {
+                <div class="audio-card @(t.LanguageCode == defaultLang ? "active" : "")" id="card-@t.LanguageCode">
+                    <div class="trans-title">@t.Title</div>
+                    <div class="trans-desc">@t.Description</div>
+                    @if (!string.IsNullOrEmpty(t.AudioUrl))
+                    {
+                        <audio controls preload="none">
+                            <source src="@t.AudioUrl" type="audio/mpeg" />
+                        </audio>
+                    }
+                </div>
+            }
+        }
+
+        @if (!string.IsNullOrEmpty(Model?.Description))
+        {
+            <div class="info-card">
+                <h3><i class="bi bi-info-circle me-1"></i>Giới thiệu</h3>
+                <p>@Model.Description</p>
+            </div>
+        }
     }
-
 </div>
 
-<div class="footer">
-    Powered by <a href="#">Vĩnh Khánh Audio Guide</a> &copy; @DateTime.Now.Year
-</div>
+<div class="footer">Powered by <a href="#">Vĩnh Khánh Audio Guide</a> &copy; @DateTime.Now.Year</div>
 
 <script>
-    function switchLang(code) {
+    const SESSION_KEY = '@sessionKey';
+    const POI_ID      = @poiId;
+    let selectedPkg   = 'single';
+
+    function selectPkg(type) {
+        selectedPkg = type;
+        document.getElementById('pkg-single').classList.toggle('selected', type === 'single');
+        document.getElementById('pkg-day').classList.toggle('selected', type === 'day');
+    }
+
+    async function doPay() {
+        const btn = document.querySelector('.btn-pay');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
+
+        try {
+            const cmsBase = '@ViewBag.CmsBase';
+            const res = await fetch(cmsBase + '/api/unlock/mock-pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionKey: SESSION_KEY,
+                    poiId: POI_ID,
+                    unlockType: selectedPkg
+                })
+            });
+
+            if (res.ok) {
+                // Lưu vào localStorage để lần sau không cần trả lại
+                localStorage.setItem('unlock_' + POI_ID, SESSION_KEY);
+                window.location.reload();
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check"></i> Thanh toán & Nghe ngay';
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            }
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-shield-check"></i> Thanh toán & Nghe ngay';
+        }
+    }
+
+    function switchLang(code, event) {
         document.querySelectorAll('.audio-card').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
         const card = document.getElementById('card-' + code);
         if (card) card.classList.add('active');
         event.target.classList.add('active');
-        // Pause other audios
-        document.querySelectorAll('audio').forEach(a => { a.pause(); });
+        document.querySelectorAll('audio').forEach(a => a.pause());
+    }
+
+    // Giới hạn nghe thử 10 giây
+    const preview = document.getElementById('previewAudio');
+    if (preview) {
+        preview.addEventListener('timeupdate', () => {
+            if (preview.currentTime >= 10) {
+                preview.pause();
+                preview.currentTime = 0;
+            }
+        });
     }
 </script>
 </body>

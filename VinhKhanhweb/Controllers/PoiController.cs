@@ -67,6 +67,37 @@ public class PoiController : Controller
         }
 
         ViewBag.Translations = trans ?? new List<PoiTranslation>();
+
+        // Mỗi khách có 1 sessionKey riêng (lưu trong cookie) để định danh
+        var sessionKey = Request.Cookies["vk_session"];
+        if (string.IsNullOrEmpty(sessionKey))
+        {
+            sessionKey = Guid.NewGuid().ToString("N");
+            Response.Cookies.Append("vk_session", sessionKey, new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(30),
+                HttpOnly = false,
+                SameSite = SameSiteMode.Lax
+            });
+        }
+
+        // Kiểm tra quyền nghe từ CMS
+        bool hasAccess = false;
+        try
+        {
+            var checkResp = await _http.GetAsync($"api/unlock/check?sessionKey={sessionKey}&poiId={id}");
+            if (checkResp.IsSuccessStatusCode)
+            {
+                var result = await checkResp.Content.ReadFromJsonAsync<Dictionary<string, bool>>();
+                hasAccess = result?.GetValueOrDefault("hasAccess") == true;
+            }
+        }
+        catch { /* Nếu lỗi thì coi như chưa trả phí */ }
+
+        ViewBag.HasAccess = hasAccess;
+        ViewBag.SessionKey = sessionKey;
+        ViewBag.CmsBase = _config["CmsApiUrl"] ?? "http://localhost:5137";
+
         return View(poi);
     }
 

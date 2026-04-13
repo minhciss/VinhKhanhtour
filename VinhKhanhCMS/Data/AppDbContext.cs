@@ -14,4 +14,5 @@ public class AppDbContext : DbContext
     public DbSet<PoiTranslation> PoiTranslations { get; set; }
     public DbSet<AppUser> AppUsers { get; set; }
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<UserPoiUnlock> UserPoiUnlocks { get; set; }
 }
