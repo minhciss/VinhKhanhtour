@@ -231,8 +231,8 @@
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
 
         try {
-            const cmsBase = '@ViewBag.CmsBase';
-            const res = await fetch(cmsBase + '/api/unlock/mock-pay', {
+            // Gọi proxy trên Web MVC — tránh CORS khi gọi thẳng CMS
+            const res = await fetch('/Poi/Pay', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -243,15 +243,16 @@
             });
 
             if (res.ok) {
-                // Lưu vào localStorage để lần sau không cần trả lại
-                localStorage.setItem('unlock_' + POI_ID, SESSION_KEY);
                 window.location.reload();
             } else {
+                const txt = await res.text();
+                console.error('Pay error:', txt);
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-shield-check"></i> Thanh toán & Nghe ngay';
                 alert('Có lỗi xảy ra. Vui lòng thử lại.');
             }
         } catch (e) {
+            console.error(e);
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-shield-check"></i> Thanh toán & Nghe ngay';
         }

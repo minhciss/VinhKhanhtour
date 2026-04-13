@@ -103,17 +103,35 @@ public class PoiController : Controller
 
     public IActionResult Qr(int id)
     {
-        // 🔥 QR Code in ra ngoài đời thật cho du khách quét => PHẢI luôn cố định là public domain của hệ thống.
-        // Không dùng localhost hay IP nội bộ vì khách sẽ không truy cập được.
         string publicDomain = _config["PublicDomainUrl"] ?? "https://vinhkhanh-admin.onrender.com";
-        var url = $"{publicDomain}/Public/Poi/{id}";
+        var url = $"{publicDomain}/poi/{id}";
 
         var qrGenerator = new QRCodeGenerator();
         var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
         var qrCode = new PngByteQRCode(qrData);
-
-        var bytes = qrCode.GetGraphic(20);
-
-        return File(bytes, "image/png");
+        return File(qrCode.GetGraphic(20), "image/png");
     }
+
+    // Proxy: tránh CORS khi JS gọi thẳng CMS từ browser
+    [HttpPost]
+    public async Task<IActionResult> Pay([FromBody] PayRequest req)
+    {
+        try
+        {
+            var res = await _http.PostAsJsonAsync("api/unlock/mock-pay", req);
+            var body = await res.Content.ReadAsStringAsync();
+            return Content(body, "application/json");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+}
+
+public class PayRequest
+{
+    public string SessionKey  { get; set; } = "";
+    public int    PoiId       { get; set; }
+    public string? UnlockType { get; set; } = "single";
 }
