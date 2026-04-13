@@ -18,47 +18,52 @@ public class PoiController : Controller
     {
         Poi? poi = null;
         List<PoiTranslation>? trans = null;
+        bool coldStart = false;
 
-        // Thử tối đa 3 lần nếu gặp 429 Too Many Requests
-        for (int attempt = 0; attempt < 3; attempt++)
+        // Thử 2 lần — lần 2 chờ lâu hơn để Render kịp wake up
+        for (int attempt = 0; attempt < 2; attempt++)
         {
             try
             {
                 if (attempt > 0)
-                    await Task.Delay(1500 * attempt); // Chờ 1.5s, 3s giữa các lần retry
+                    await Task.Delay(8000); // Chờ 8s ở lần retry
 
                 var poiResp = await _http.GetAsync($"api/pois/{id}");
+
                 if (poiResp.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
                 {
-                    if (attempt < 2) continue; // Thử lại
+                    coldStart = true;
+                    if (attempt < 1) continue;
                     break;
                 }
-                poiResp.EnsureSuccessStatusCode();
-                poi = await poiResp.Content.ReadFromJsonAsync<Poi>();
 
+                if (!poiResp.IsSuccessStatusCode)
+                {
+                    coldStart = true;
+                    if (attempt < 1) continue;
+                    break;
+                }
+
+                poi = await poiResp.Content.ReadFromJsonAsync<Poi>();
                 var transResp = await _http.GetAsync($"api/pois/{id}/translations");
                 if (transResp.IsSuccessStatusCode)
                     trans = await transResp.Content.ReadFromJsonAsync<List<PoiTranslation>>();
 
-                break; // Thành công, thoát vòng lặp
-            }
-            catch (Exception ex) when (attempt < 2)
-            {
-                // Thử lại
-                continue;
+                coldStart = false;
+                break;
             }
             catch
             {
-                // Thất bại hoàn toàn — hiển thị trang lỗi thân thiện
-                ViewBag.Translations = new List<PoiTranslation>();
-                return View(new Poi { Name = "Không thể tải dữ liệu", Description = "Hệ thống đang bận, vui lòng thử lại sau vài giây." });
+                coldStart = true;
+                if (attempt < 1) continue;
             }
         }
 
-        if (poi == null)
+        // Nếu hệ thống đang cold-start, trả về trang "đang khởi động"
+        if (coldStart || poi == null)
         {
-            ViewBag.Translations = new List<PoiTranslation>();
-            return View(new Poi { Name = "Không thể tải dữ liệu", Description = "Hệ thống đang bận, vui lòng thử lại sau vài giây." });
+            ViewBag.PoiId = id;
+            return View("WakingUp");
         }
 
         ViewBag.Translations = trans ?? new List<PoiTranslation>();

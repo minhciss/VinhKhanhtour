@@ -1,0 +1,128 @@
+@{
+    Layout = null;
+    int poiId = ViewBag.PoiId ?? 0;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đang khởi động – Vĩnh Khánh Audio Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100svh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 24px;
+            padding: 48px 36px;
+            text-align: center;
+            max-width: 360px;
+            width: 90%;
+        }
+        /* Spinner animation */
+        .spinner {
+            width: 72px; height: 72px;
+            border: 5px solid rgba(255,255,255,0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 28px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        h1 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+        p  { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 28px; }
+
+        /* Progress bar */
+        .progress-wrap {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px; height: 6px;
+            overflow: hidden; margin-bottom: 16px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #fff;
+            border-radius: 8px;
+            width: 0%;
+            transition: width 1s linear;
+        }
+        .countdown { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 28px; }
+
+        .btn-retry {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white; border-radius: 12px;
+            padding: 10px 28px; font-size: 14px;
+            font-weight: 600; text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-retry:hover { background: rgba(255,255,255,0.3); color: white; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px; padding: 4px 14px;
+            font-size: 12px; margin-bottom: 20px;
+        }
+        .dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%;
+               animation: pulse 1.5s ease-in-out infinite; }
+        @@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="spinner"></div>
+
+        <div class="badge">
+            <span class="dot"></span>
+            Hệ thống đang thức dậy
+        </div>
+
+        <h1>Đang chuẩn bị nội dung</h1>
+        <p>
+            Vĩnh Khánh Audio Guide đang khởi động.<br/>
+            Trang sẽ tự động tải lại sau <strong id="secText">20</strong> giây.
+        </p>
+
+        <div class="progress-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="countdown">Còn lại: <span id="countdown">20</span>s</p>
+
+        <a href="/poi/@poiId" class="btn-retry">⟳ Thử ngay</a>
+    </div>
+
+    <script>
+        const TOTAL = 20;
+        let remaining = TOTAL;
+        const bar = document.getElementById('progressBar');
+        const countEl = document.getElementById('countdown');
+        const secText = document.getElementById('secText');
+
+        secText.textContent = TOTAL;
+
+        const timer = setInterval(() => {
+            remaining--;
+            const pct = ((TOTAL - remaining) / TOTAL) * 100;
+            bar.style.width = pct + '%';
+            countEl.textContent = remaining;
+
+            if (remaining <= 0) {
+                clearInterval(timer);
+                window.location.reload();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
