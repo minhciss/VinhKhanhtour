@@ -73,27 +73,17 @@ namespace VinhKhanhTour.PageModels
             {
                 IsBusy = true;
 
-                // Ưu tiên API — Local DB chỉ dùng khi không có mạng / API bị tắt
+                // Chỉ lấy POI từ CMS API — không dùng local DB
                 var data = await _apiService.GetPoisAsync();
-                
-                if (data != null && data.Count > 0)
-                {
-                    // API thành công → dùng dữ liệu từ server, bỏ qua local DB
-                    _allPois = data;
-                }
-                else
-                {
-                    // Fallback: không có mạng hoặc server lỗi → dùng local DB
-                    _allPois = await _poiRepository.GetAllPoisAsync();
-                }
+                _allPois = data ?? new List<Poi>();
 
                 ApplyFilters();
             }
             catch (Exception ex)
             {
                 _errorHandler.HandleError(ex);
-                // Nếu lỗi exception, thử load local DB
-                try { _allPois = await _poiRepository.GetAllPoisAsync(); ApplyFilters(); } catch { }
+                _allPois = new List<Poi>();
+                ApplyFilters();
             }
             finally
             {

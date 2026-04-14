@@ -30,14 +30,8 @@ namespace VinhKhanhTour.Data
                 var dbPath = Constants.DatabasePath.Replace("Data Source=", "");
 
                 _connection = new SQLiteAsyncConnection(dbPath);
-                var result = await _connection.CreateTableAsync<Poi>();
-
-                if (result == CreateTableResult.Created)
-                {
-                    // Seed data if this is the first time creating the table
-                    var sampleData = Poi.GetSampleData();
-                    await _connection.InsertAllAsync(sampleData);
-                }
+                await _connection.CreateTableAsync<Poi>();
+                // Không seed data — POI chỉ lấy từ CMS API
 
                 _hasInitialized = true;
             }
