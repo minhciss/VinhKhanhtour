@@ -68,7 +68,7 @@ public class ApiService
                 Id          = d.Id,
                 Name        = d.Name,
                 Description = d.Description,
-                ImageUrl    = d.ImageUrl,
+                ImageUrl    = FixUrl(d.ImageUrl),   // Fix localhost → 10.0.2.2
                 Latitude    = d.Latitude,
                 Longitude   = d.Longitude,
                 Radius      = d.Radius > 0 ? d.Radius : 30,
@@ -80,7 +80,7 @@ public class ApiService
                     LanguageCode = t.LanguageCode,
                     Title        = t.Title,
                     Description  = t.Description,
-                    AudioUrl     = t.AudioUrl
+                    AudioUrl     = FixUrl(t.AudioUrl) // Fix localhost → 10.0.2.2
                 }).ToList() ?? new()
             }).ToList();
         }
@@ -94,5 +94,21 @@ public class ApiService
             Debug.WriteLine($"[ApiService] Error: {ex.Message}");
             return new List<Poi>();
         }
+    }
+
+    /// <summary>
+    /// Android Emulator không truy cập được "localhost" của máy host.
+    /// Phải đổi thành 10.0.2.2 để trỏ đúng vào máy host.
+    /// </summary>
+    private static string FixUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+#if ANDROID
+        return url
+            .Replace("http://localhost", "http://10.0.2.2")
+            .Replace("http://127.0.0.1", "http://10.0.2.2");
+#else
+        return url;
+#endif
     }
 }
