@@ -32,14 +32,24 @@ public class AdminController : Controller
     {
         var check = CheckAdmin(); if (check != null) return check;
 
-        var url = string.IsNullOrEmpty(status) ? "api/pois" : $"api/pois?status={status}";
-        var data = await _http.GetFromJsonAsync<List<Poi>>(url) ?? new List<Poi>();
+        List<Poi> data = new();
+        List<Poi>? allPois = null;
+        try
+        {
+            // Lấy tất cả POI 1 lần, lọc ở client — tránh gọi API 2 lần
+            allPois = await _http.GetFromJsonAsync<List<Poi>>("api/pois") ?? new();
+            data = string.IsNullOrEmpty(status) || status == "all"
+                ? allPois
+                : allPois.Where(p => p.Status == status).ToList();
+        }
+        catch
+        {
+            TempData["Error"] = "Không thể tải dữ liệu POI. Vui lòng thử lại.";
+        }
 
         ViewBag.AdminBaseUrl = _adminBaseUrl;
         ViewBag.CurrentStatus = status ?? "all";
-
-        var pending = await _http.GetFromJsonAsync<List<Poi>>("api/pois?status=Pending");
-        ViewBag.PendingCount = pending?.Count ?? 0;
+        ViewBag.PendingCount = allPois?.Count(p => p.Status == "Pending") ?? 0;
         ViewBag.AdminName = HttpContext.Session.GetString("FullName") ?? "Admin";
         return View(data);
     }
@@ -87,6 +97,7 @@ public class AdminController : Controller
     // ─────────────────────────────────────────
     // DELETE / TOGGLE POI
     // ─────────────────────────────────────────
+    [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
         var check = CheckAdmin(); if (check != null) return check;
@@ -104,6 +115,7 @@ public class AdminController : Controller
     // ─────────────────────────────────────────
     // APPROVE / REJECT POI
     // ─────────────────────────────────────────
+    [HttpPost]
     public async Task<IActionResult> ApprovePoi(int id)
     {
         var check = CheckAdmin(); if (check != null) return check;
@@ -111,6 +123,7 @@ public class AdminController : Controller
         return RedirectToAction("Index", new { status = "Pending" });
     }
 
+    [HttpPost]
     public async Task<IActionResult> RejectPoi(int id)
     {
         var check = CheckAdmin(); if (check != null) return check;

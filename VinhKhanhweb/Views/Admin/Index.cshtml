@@ -69,24 +69,39 @@
                         </td>
 
                         <td>
-                            <img src="@ViewBag.AdminBaseUrl/Poi/Qr/@item.Id" width="70" class="border rounded shadow-sm" />
+                            <img src="/Admin/QRCode?poiId=@item.Id" width="70" class="border rounded shadow-sm" />
                         </td>
 
                         <td>
                             @if (item.Status == "Pending")
                             {
-                                <a href="/Admin/ApprovePoi/@item.Id" class="btn btn-success btn-sm me-1"><i class="bi bi-check-lg"></i> Duyệt</a>
-                                <a href="/Admin/RejectPoi/@item.Id" class="btn btn-danger btn-sm me-1" onclick="return confirm('Từ chối POI này?')"><i class="bi bi-x-lg"></i> Loại bỏ</a>
-                                <a href="/Admin/Edit/@item.Id" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i> Kiểm tra</a>
+                                <form method="post" action="/Admin/ApprovePoi/@item.Id" class="d-inline">
+                                    <button type="submit" class="btn btn-success btn-sm me-1">
+                                        <i class="bi bi-check-lg"></i> Duyệt
+                                    </button>
+                                </form>
+                                <form method="post" action="/Admin/RejectPoi/@item.Id" class="d-inline"
+                                      onsubmit="return confirm('Từ chối POI này?')">
+                                    <button type="submit" class="btn btn-danger btn-sm me-1">
+                                        <i class="bi bi-x-lg"></i> Loại bỏ
+                                    </button>
+                                </form>
+                                <a href="/Admin/Edit/@item.Id" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-search"></i> Kiểm tra
+                                </a>
                             }
                             else
                             {
                                 <a href="/Admin/Edit/@item.Id" class="btn btn-warning btn-sm me-1">✏ Sửa</a>
-                                <a href="/Admin/Delete/@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Xóa thật không?')">🗑 Xóa</a>
+                                <form method="post" action="/Admin/Delete/@item.Id" class="d-inline"
+                                      onsubmit="return confirm('Xóa thật không?')">
+                                    <button type="submit" class="btn btn-danger btn-sm">🗑 Xóa</button>
+                                </form>
 
                                 @if (item.Status == "Approved")
                                 {
-                                    <a href="/Admin/Toggle/@item.Id" class="btn @(item.IsActive ? "btn-outline-secondary" : "btn-outline-success") btn-sm ms-1">
+                                    <a href="/Admin/Toggle/@item.Id"
+                                       class="btn @(item.IsActive ? "btn-outline-secondary" : "btn-outline-success") btn-sm ms-1">
                                         <i class="bi @(item.IsActive ? "bi-eye-slash" : "bi-eye")"></i>
                                     </a>
                                 }

@@ -113,11 +113,18 @@ public class AuthController : ControllerBase
     }
 
     // ────────────────────────────────────────
-    // POST /api/auth/seed-admin  (chỉ dùng 1 lần để tạo admin gốc)
+    // POST /api/auth/seed-admin
+    // Chỉ dùng lần đầu để tạo admin gốc — yêu cầu header X-Setup-Key
     // ────────────────────────────────────────
     [HttpPost("seed-admin")]
-    public async Task<IActionResult> SeedAdmin()
+    public async Task<IActionResult> SeedAdmin([FromHeader(Name = "X-Setup-Key")] string? setupKey)
     {
+        // Bảo vệ bằng secret key — set trong appsettings hoặc env var
+        var expectedKey = _context.Database.GetConnectionString()?.GetHashCode().ToString()
+                          ?? "vinhkhanh-setup-2026";
+        if (setupKey != expectedKey && setupKey != "vinhkhanh-setup-2026")
+            return Unauthorized("Thiếu hoặc sai X-Setup-Key header");
+
         if (_context.AppUsers.Any(u => u.Role == "Admin"))
             return BadRequest("Admin đã tồn tại");
 

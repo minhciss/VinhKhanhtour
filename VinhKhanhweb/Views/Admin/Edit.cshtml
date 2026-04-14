@@ -45,10 +45,19 @@
     </div>
 
     <div class="mb-3">
-        <img id="previewImg"
-             src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "" : ViewBag.CmsBaseUrl + "/images/" + Model.ImageUrl)"
-             style="max-width:200px; @(string.IsNullOrEmpty(Model.ImageUrl) ? "display:none;" : "")" />
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img id="previewImg" src="@Model.ImageUrl" style="max-width:200px; border-radius:8px;" />
+        }
+        else
+        {
+            <img id="previewImg" src="" style="max-width:200px; display:none;" />
+        }
     </div>
+
+    <!-- Giữ lại Status và OwnerId — Admin edit không được mất thông tin này -->
+    <input type="hidden" asp-for="Status" />
+    <input type="hidden" asp-for="OwnerId" />
 
     <!-- TRẠNG THÁI -->
     <div class="mb-3 form-check">

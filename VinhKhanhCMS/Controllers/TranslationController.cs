@@ -12,12 +12,14 @@ public class TranslationController : ControllerBase
     private readonly AppDbContext _context;
     private readonly TtsService _tts;
     private readonly IConfiguration _config;
+    private readonly IHttpClientFactory _httpFactory;
 
-    public TranslationController(AppDbContext context, TtsService tts, IConfiguration config)
+    public TranslationController(AppDbContext context, TtsService tts, IConfiguration config, IHttpClientFactory httpFactory)
     {
         _context = context;
         _tts = tts;
         _config = config;
+        _httpFactory = httpFactory;
     }
 
     // ✅ Lấy base URL từ env var API_BASE_URL (Render) hoặc fallback về config/request
@@ -183,7 +185,8 @@ public class TranslationController : ControllerBase
     {
         try
         {
-            var client = new HttpClient();
+            // ✅ Dùng IHttpClientFactory thay vì new HttpClient() để tránh memory leak
+            var client = _httpFactory.CreateClient();
             var url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl={targetLang}&dt=t&q={Uri.EscapeDataString(text)}";
             var response = await client.GetStringAsync(url);
             var json = System.Text.Json.JsonDocument.Parse(response);

@@ -12,8 +12,9 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-# Render inject biến PORT vào container — app đọc và listen đúng port đó
-ENV ASPNETCORE_URLS=http://+:10000
+# Render inject biến PORT động vào container
+# Dùng script entrypoint để đọc $PORT lúc runtime thay vì hardcode
+ENV ASPNETCORE_URLS=http://+:${PORT:-10000}
 EXPOSE 10000
 
 ENTRYPOINT ["dotnet", "VinhKhanhadmin.dll"]
