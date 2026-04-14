@@ -19,24 +19,35 @@ public class NarrationEngine
             var lang = LocalizationResourceManager.Instance.CurrentLanguageCode;
 
             // ── Bước 1: Thử phát audio từ URL remote (khi có API backend) ──────────
-            var translation = poi.Translations?
-                .Where(t => !string.IsNullOrEmpty(t.AudioUrl) && t.AudioUrl.Contains("-"))
-                .FirstOrDefault(t => t.LanguageCode == lang)
-                ?? poi.Translations?
-                    .FirstOrDefault(t => !string.IsNullOrEmpty(t.AudioUrl) && t.AudioUrl.Contains("-"));
+            // Lấy đúng ngôn ngữ hiện tại, sau đó mới fallback về "vi"
+            PoiTranslation? translation = null;
+            if (poi.Translations != null && poi.Translations.Count > 0)
+            {
+                // Ưu tiên: đúng ngôn ngữ hiện tại có AudioUrl
+                translation = poi.Translations.FirstOrDefault(t => 
+                    t.LanguageCode == lang && !string.IsNullOrEmpty(t.AudioUrl));
+                
+                // Fallback: tiếng Việt có AudioUrl
+                if (translation == null)
+                    translation = poi.Translations.FirstOrDefault(t => 
+                        t.LanguageCode == "vi" && !string.IsNullOrEmpty(t.AudioUrl));
+                
+                // Fallback cuối: bất kỳ translation nào có AudioUrl
+                if (translation == null)
+                    translation = poi.Translations.FirstOrDefault(t => 
+                        !string.IsNullOrEmpty(t.AudioUrl));
+            }
 
             if (translation != null && !string.IsNullOrEmpty(translation.AudioUrl))
             {
                 _player?.Stop();
 
-                // Tải audio trong background thread
                 var memoryStream = await Task.Run(async () =>
                 {
                     var bytes = await _http.GetByteArrayAsync(translation.AudioUrl);
                     return new MemoryStream(bytes);
                 });
 
-                // Phát trên UI thread
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     _player = AudioManager.Current.CreatePlayer(memoryStream);

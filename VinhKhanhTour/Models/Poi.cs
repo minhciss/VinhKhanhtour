@@ -180,6 +180,7 @@ namespace VinhKhanhTour.Models
             OnPropertyChanged(nameof(DisplayDistanceText));
             OnPropertyChanged(nameof(ListDisplayDistanceText));
             OnPropertyChanged(nameof(DisplayImage));
+            OnPropertyChanged(nameof(DisplayImageSource));
             OnPropertyChanged(nameof(DisplayRadiusText));
             OnPropertyChanged(nameof(ListDisplayRadiusText));
         }
