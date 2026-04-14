@@ -37,6 +37,7 @@ public class ApiService
     }
 
     public ApiService()
+    {
         _httpClient = new HttpClient();
         // Kết nối trực tiếp tới server Render để lấy dữ liệu mới nhất
         _httpClient.BaseAddress = new Uri("https://vinhkhanh-cms.onrender.com");
@@ -79,7 +80,7 @@ public class ApiService
                     LanguageCode = t.LanguageCode,
                     Title        = t.Title,
                     Description  = t.Description,
-                    AudioUrl     = FixUrl(t.AudioUrl) // Fix localhost → 10.0.2.2
+                    AudioUrl     = t.AudioUrl // Đã là URL đầy đủ từ Render
                 }).ToList() ?? new()
             }).ToList();
         }
@@ -96,18 +97,11 @@ public class ApiService
     }
 
     /// <summary>
-    /// Android Emulator không truy cập được "localhost" của máy host.
-    /// Phải đổi thành 10.0.2.2 để trỏ đúng vào máy host.
+    /// Giữ lại cho tương thích — hiện không cần replace do dùng Render URL
     /// </summary>
     private static string FixUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return string.Empty;
-#if ANDROID
-        return url
-            .Replace("http://localhost", "http://10.0.2.2")
-            .Replace("http://127.0.0.1", "http://10.0.2.2");
-#else
         return url;
-#endif
     }
 }
