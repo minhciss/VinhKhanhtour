@@ -160,15 +160,12 @@
         </div>
 
         <!-- Mô tả mờ để khách thấy còn nội dung -->
-        @{
-            var paywallDesc = translations.FirstOrDefault()?.Description ?? Model?.Description ?? "";
-        }
-        @if (!string.IsNullOrEmpty(paywallDesc))
+        @if (!string.IsNullOrEmpty(translations.FirstOrDefault()?.Description ?? Model?.Description ?? ""))
         {
             <div class="info-card">
                 <h3><i class="bi bi-info-circle me-1"></i>Giới thiệu</h3>
                 <div class="preview-blur">
-                    <p>@paywallDesc</p>
+                    <p>@(translations.FirstOrDefault()?.Description ?? Model?.Description ?? "")</p>
                 </div>
             </div>
         }
