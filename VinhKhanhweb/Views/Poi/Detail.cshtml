@@ -13,6 +13,9 @@
         {"de","🇩🇪 Deutsch"},{"es","🇪🇸 Español"},{"it","🇮🇹 Italiano"}
     };
     var defaultLang = translations.FirstOrDefault()?.LanguageCode ?? "vi";
+
+    var desc = Model?.Description ?? "";
+    var shortDesc = desc.Length > 120 ? desc.Substring(0, 120) + "..." : desc;
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -21,9 +24,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <title>@Model?.Name – Audio Guide | Vĩnh Khánh</title>
     <!-- SEO & Social Sharing -->
-    <meta name="description" content="@(Model?.Description?.Length > 120 ? Model.Description[..120] + "..." : Model?.Description)" />
+    <meta name="description" content="@shortDesc" />
     <meta property="og:title" content="@Model?.Name – Vĩnh Khánh Audio Guide" />
-    <meta property="og:description" content="@(Model?.Description?.Length > 120 ? Model.Description[..120] + "..." : Model?.Description)" />
+    <meta property="og:description" content="@shortDesc" />
     <meta property="og:image" content="@Model?.ImageUrl" />
     <meta property="og:type" content="website" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
