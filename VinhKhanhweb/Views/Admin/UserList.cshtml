@@ -25,6 +25,7 @@
                     <th>Họ Tên</th>
                     <th>Cơ sở (Đơn vị)</th>
                     <th>Liên hệ</th>
+                    <th>Gói VIP</th>
                     <th>Trạng thái</th>
                     <th style="width:250px;">Hành động</th>
                 </tr>
@@ -39,6 +40,27 @@
                         <td>
                             <small class="d-block text-muted"><i class="bi bi-envelope me-1"></i>@u.Email</small>
                             <small class="d-block text-muted"><i class="bi bi-telephone me-1"></i>@u.Phone</small>
+                        </td>
+                        <td>
+                            @if (u.SubscriptionExpiryDate.HasValue)
+                            {
+                                if (u.SubscriptionExpiryDate.Value > DateTime.UtcNow)
+                                {
+                                    <span class="badge bg-success p-2">
+                                        <i class="bi bi-star-fill me-1 text-warning"></i> @u.SubscriptionExpiryDate.Value.ToString("dd/MM/yyyy")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary p-2">
+                                        Đã hết hạn (@u.SubscriptionExpiryDate.Value.ToString("dd/MM/yyyy"))
+                                    </span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark p-2 border">Chưa đăng ký</span>
+                            }
                         </td>
                         <td>
                             @if (u.Status == "Pending")
@@ -76,7 +98,7 @@
                 }
                 @if (!Model.Any())
                 {
-                    <tr><td colspan="6" class="text-center text-muted py-4">Không có tài khoản nào.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Không có tài khoản nào.</td></tr>
                 }
             </tbody>
         </table>
