@@ -18,10 +18,19 @@ public class PoiController : ControllerBase
         _config = config;
     }
 
-    private string GetBaseUrl() =>
-        Environment.GetEnvironmentVariable("API_BASE_URL")
-        ?? _config["ApiBaseUrl"]
-        ?? $"{Request.Scheme}://{Request.Host}";
+    private string GetBaseUrl()
+    {
+        // 1. Ưu tiên biến môi trường (Render)
+        var apiUrl = Environment.GetEnvironmentVariable("API_BASE_URL");
+        if (!string.IsNullOrEmpty(apiUrl)) return apiUrl.TrimEnd('/');
+
+        // 2. Ưu tiên cấu hình appsettings.json
+        apiUrl = _config["ApiBaseUrl"];
+        if (!string.IsNullOrEmpty(apiUrl)) return apiUrl.TrimEnd('/');
+
+        // 3. Fallback cuối cùng
+        return $"{Request.Scheme}://{Request.Host}";
+    }
 
     // 🔍 Lấy tất cả POI — có thể lọc theo ?status=Pending&ownerId=5
     [HttpGet]

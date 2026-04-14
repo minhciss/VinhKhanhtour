@@ -26,42 +26,17 @@ builder.Services.AddHttpClient(); // ✅ Cần thiết cho IHttpClientFactory tr
 
 var app = builder.Build();
 
-// ✅ Tự động tạo bảng trong PostgreSQL khi khởi động
+// ✅ Tự động Migrations khi khởi động (Tùy chọn, nên dùng lành mạnh hơn EnsureCreated)
+// Tuy nhiên để an toàn nhất trong môi trường dev, ta nên chạy lệnh migration thủ công.
+// Ta tạm thời comment code can thiệp DB trực tiếp ở đây để tránh treo app.
+
+/*
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
-
-    try
-    {
-        db.Database.ExecuteSqlRaw("ALTER TABLE \"PoiTranslations\" ADD COLUMN \"AudioData\" bytea;");
-    }
-    catch (Exception)
-    {
-        // Cột đã tồn tại hoặc lỗi (bỏ qua)
-    }
-
-    // Tạo bảng UserPoiUnlocks nếu chưa có (cho hệ thống tính phí demo)
-    try
-    {
-        db.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS ""UserPoiUnlocks"" (
-                ""Id""          SERIAL PRIMARY KEY,
-                ""SessionKey""  TEXT NOT NULL,
-                ""PoiId""       INT NOT NULL,
-                ""UnlockedAt""  TIMESTAMP NOT NULL DEFAULT NOW(),
-                ""ExpiresAt""   TIMESTAMP NOT NULL,
-                ""UnlockType""  TEXT NOT NULL DEFAULT 'single',
-                ""AmountPaid""  DECIMAL(18,2) NOT NULL DEFAULT 5000,
-                ""PaymentNote"" TEXT NOT NULL DEFAULT ''
-            );
-        ");
-    }
-    catch (Exception)
-    {
-        // Bảng đã tồn tại (bỏ qua)
-    }
+    // db.Database.Migrate(); 
 }
+*/
 
 app.UseStaticFiles();
 app.UseSwagger();

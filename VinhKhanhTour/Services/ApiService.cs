@@ -37,11 +37,10 @@ public class ApiService
     }
 
     public ApiService()
-    {
         _httpClient = new HttpClient();
-        // Android Emulator: 10.0.2.2 trỏ về localhost của máy host
-        _httpClient.BaseAddress = new Uri("http://10.0.2.2:5137");
-        _httpClient.Timeout = TimeSpan.FromSeconds(10);
+        // Kết nối trực tiếp tới server Render để lấy dữ liệu mới nhất
+        _httpClient.BaseAddress = new Uri("https://vinhkhanh-cms.onrender.com");
+        _httpClient.Timeout = TimeSpan.FromSeconds(15);
     }
 
     public async Task<List<Poi>> GetPoisAsync()
