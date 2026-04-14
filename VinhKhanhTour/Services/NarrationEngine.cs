@@ -20,31 +20,30 @@ public class NarrationEngine
 
             // ── Bước 1: Thử phát audio từ URL remote (khi có API backend) ──────────
             // Lấy đúng ngôn ngữ hiện tại, sau đó mới fallback về "vi"
-            PoiTranslation? translation = null;
-            if (poi.Translations != null && poi.Translations.Count > 0)
+            string audioUrl = string.Empty;
+            if (poi.Translations is { Count: > 0 } translations)
             {
                 // Ưu tiên: đúng ngôn ngữ hiện tại có AudioUrl
-                translation = poi.Translations.FirstOrDefault(t => 
+                var match = translations.FirstOrDefault(t =>
                     t.LanguageCode == lang && !string.IsNullOrEmpty(t.AudioUrl));
-                
-                // Fallback: tiếng Việt có AudioUrl
-                if (translation == null)
-                    translation = poi.Translations.FirstOrDefault(t => 
-                        t.LanguageCode == "vi" && !string.IsNullOrEmpty(t.AudioUrl));
-                
+
+                // Fallback: tiếng Việt
+                match ??= translations.FirstOrDefault(t =>
+                    t.LanguageCode == "vi" && !string.IsNullOrEmpty(t.AudioUrl));
+
                 // Fallback cuối: bất kỳ translation nào có AudioUrl
-                if (translation == null)
-                    translation = poi.Translations.FirstOrDefault(t => 
-                        !string.IsNullOrEmpty(t.AudioUrl));
+                match ??= translations.FirstOrDefault(t => !string.IsNullOrEmpty(t.AudioUrl));
+
+                audioUrl = match?.AudioUrl ?? string.Empty;
             }
 
-            if (translation != null && !string.IsNullOrEmpty(translation.AudioUrl))
+            if (!string.IsNullOrEmpty(audioUrl))
             {
                 _player?.Stop();
 
                 var memoryStream = await Task.Run(async () =>
                 {
-                    var bytes = await _http.GetByteArrayAsync(translation.AudioUrl);
+                    var bytes = await _http.GetByteArrayAsync(audioUrl);
                     return new MemoryStream(bytes);
                 });
 
