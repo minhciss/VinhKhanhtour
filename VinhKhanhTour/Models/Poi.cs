@@ -123,15 +123,41 @@ namespace VinhKhanhTour.Models
                 : ImageUrl;
 
         [Ignore]
-        public string DisplayName => GetLocalized(Name, NameEn, NameEs, NameFr, NameDe,
-                                                  NameZh, NameJa, NameKo, NameRu,
-                                                  NameIt, NamePt, NameHi);
+        public string DisplayName
+        {
+            get
+            {
+                var lang = Services.LocalizationResourceManager.Instance?.CurrentLanguageCode ?? "vi";
+                if (Translations != null && Translations.Any())
+                {
+                    var trans = Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? 
+                                Translations.FirstOrDefault(t => t.LanguageCode == "en") ?? 
+                                Translations.FirstOrDefault();
+                    if (trans != null && !string.IsNullOrWhiteSpace(trans.Title)) return trans.Title;
+                }
+                return GetLocalized(Name, NameEn, NameEs, NameFr, NameDe, NameZh, NameJa, NameKo, NameRu, NameIt, NamePt, NameHi);
+            }
+        }
 
         [Ignore]
-        public string DisplayDescription => GetLocalized(Description, DescriptionEn, DescriptionEs,
-                                                         DescriptionFr, DescriptionDe, DescriptionZh,
-                                                         DescriptionJa, DescriptionKo, DescriptionRu,
-                                                         DescriptionIt, DescriptionPt, DescriptionHi);
+        public string DisplayDescription
+        {
+            get
+            {
+                var lang = Services.LocalizationResourceManager.Instance?.CurrentLanguageCode ?? "vi";
+                if (Translations != null && Translations.Any())
+                {
+                    var trans = Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? 
+                                Translations.FirstOrDefault(t => t.LanguageCode == "en") ?? 
+                                Translations.FirstOrDefault();
+                    if (trans != null && !string.IsNullOrWhiteSpace(trans.Description)) return trans.Description;
+                }
+                return GetLocalized(Description, DescriptionEn, DescriptionEs,
+                                    DescriptionFr, DescriptionDe, DescriptionZh,
+                                    DescriptionJa, DescriptionKo, DescriptionRu,
+                                    DescriptionIt, DescriptionPt, DescriptionHi);
+            }
+        }
 
         [Ignore]
         public string DisplayTtsScript => GetLocalized(TtsScript, TtsScriptEn, TtsScriptEs,

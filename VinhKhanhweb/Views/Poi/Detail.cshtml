@@ -14,7 +14,8 @@
     };
     var defaultLang = translations.FirstOrDefault()?.LanguageCode ?? "vi";
 
-    var desc = Model?.Description ?? "";
+    // Ưu tiên mô tả từ translation đầu tiên, fallback về Model.Description
+    var desc = translations.FirstOrDefault()?.Description ?? Model?.Description ?? "";
     var shortDesc = desc.Length > 120 ? desc.Substring(0, 120) + "..." : desc;
 }
 <!DOCTYPE html>
@@ -159,12 +160,15 @@
         </div>
 
         <!-- Mô tả mờ để khách thấy còn nội dung -->
-        @if (!string.IsNullOrEmpty(Model?.Description))
+        @{
+            var paywallDesc = translations.FirstOrDefault()?.Description ?? Model?.Description ?? "";
+        }
+        @if (!string.IsNullOrEmpty(paywallDesc))
         {
             <div class="info-card">
                 <h3><i class="bi bi-info-circle me-1"></i>Giới thiệu</h3>
                 <div class="preview-blur">
-                    <p>@Model.Description</p>
+                    <p>@paywallDesc</p>
                 </div>
             </div>
         }
@@ -198,9 +202,9 @@
 
             @foreach (var t in translations)
             {
-                <div class="audio-card @(t.LanguageCode == defaultLang ? "active" : "")" id="card-@t.LanguageCode">
+                <div class="audio-card @(t.LanguageCode == defaultLang ? "active" : "")" id="card-@t.LanguageCode"
+                     data-desc="@Html.Raw(System.Text.Encodings.Web.HtmlEncoder.Default.Encode(t.Description ?? ""))">
                     <div class="trans-title">@t.Title</div>
-                    <div class="trans-desc">@t.Description</div>
                     @if (!string.IsNullOrEmpty(t.AudioUrl))
                     {
                         <audio controls preload="none">
@@ -209,15 +213,15 @@
                     }
                 </div>
             }
-        }
 
-        @if (!string.IsNullOrEmpty(Model?.Description))
-        {
-            <div class="info-card">
+            <!-- Card mô tả động theo ngôn ngữ -->
+            <div class="info-card" id="desc-card">
                 <h3><i class="bi bi-info-circle me-1"></i>Giới thiệu</h3>
-                <p>@Model.Description</p>
+                <p id="desc-text"></p>
             </div>
         }
+
+
     }
 </div>
 
@@ -267,6 +271,17 @@
         }
     }
 
+    function updateDescCard(code) {
+        const card = document.getElementById('card-' + code);
+        const descText = document.getElementById('desc-text');
+        const descCard = document.getElementById('desc-card');
+        if (card && descText && descCard) {
+            const desc = card.dataset.desc || '';
+            descText.textContent = desc;
+            descCard.style.display = desc ? '' : 'none';
+        }
+    }
+
     function switchLang(code, event) {
         document.querySelectorAll('.audio-card').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
@@ -274,7 +289,14 @@
         if (card) card.classList.add('active');
         event.target.classList.add('active');
         document.querySelectorAll('audio').forEach(a => a.pause());
+        updateDescCard(code);
     }
+
+    // Khởi tạo desc card với ngôn ngữ mặc định
+    document.addEventListener('DOMContentLoaded', () => {
+        const defaultLang = '@defaultLang';
+        updateDescCard(defaultLang);
+    });
 
     // Giới hạn nghe thử 10 giây
     const preview = document.getElementById('previewAudio');
