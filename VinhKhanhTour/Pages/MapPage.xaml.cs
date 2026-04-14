@@ -81,27 +81,29 @@ public partial class MapPage : ContentPage
 
         MapContainer.Children.Insert(0, VinhKhanhMap);
 
-        // 🔥 LOAD DATABASE LOCAL (Fallback)
-        _poisFromApi = await _poiRepository.GetAllPoisAsync();
+        // 🔥 LOAD từ CMS API (không dùng local DB vì đã trống)
+        _poisFromApi = await _apiService.GetPoisAsync();
 
         foreach (var poi in _poisFromApi)
         {
             var pin = new Pin
             {
-                Label = poi.Name,
+                Label    = string.IsNullOrWhiteSpace(poi.Name) ? "Điểm đến" : poi.Name,
+                Address  = "Vĩnh Khánh, Quận 4", // Bắt buộc có Address để tránh crash khi click
                 Location = new Location(poi.Latitude, poi.Longitude),
-                Type = PinType.Place
+                Type     = PinType.Place
             };
 
             VinhKhanhMap.Pins.Add(pin);
 
+            double safeRadius = poi.Radius > 0 ? poi.Radius : 30;
             var circle = new Microsoft.Maui.Controls.Maps.Circle
             {
-                Center = new Location(poi.Latitude, poi.Longitude),
-                Radius = Distance.FromMeters(poi.Radius),
+                Center      = new Location(poi.Latitude, poi.Longitude),
+                Radius      = Distance.FromMeters(safeRadius),
                 StrokeColor = Colors.Gray,
                 StrokeWidth = 2,
-                FillColor = Color.FromRgba(128, 128, 128, 50)
+                FillColor   = Color.FromRgba(128, 128, 128, 50)
             };
 
             VinhKhanhMap.MapElements.Add(circle);

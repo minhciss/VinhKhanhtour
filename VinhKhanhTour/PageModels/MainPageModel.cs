@@ -50,11 +50,15 @@ namespace VinhKhanhTour.PageModels
             Geolocation.Default.LocationChanged += OnLocationChanged;
         }
 
+        // Cache vị trí GPS cuối — dùng để restore distance khi reload data
+        private Location? _lastKnownLocation;
+
         private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
             var userLocation = e.Location;
             if (userLocation != null)
             {
+                _lastKnownLocation = userLocation; // Lưu cache
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     foreach (var poi in _allPois)
@@ -76,6 +80,17 @@ namespace VinhKhanhTour.PageModels
                 // Chỉ lấy POI từ CMS API — không dùng local DB
                 var data = await _apiService.GetPoisAsync();
                 _allPois = data ?? new List<Poi>();
+
+                // Restore distance nếu đã biết vị trí GPS
+                if (_lastKnownLocation != null)
+                {
+                    foreach (var poi in _allPois)
+                    {
+                        poi.DistanceToUser = Utilities.LocationHelper.CalculateDistanceInMeters(
+                            _lastKnownLocation.Latitude, _lastKnownLocation.Longitude,
+                            poi.Latitude, poi.Longitude);
+                    }
+                }
 
                 ApplyFilters();
             }
