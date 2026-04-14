@@ -81,12 +81,8 @@ public partial class MapPage : ContentPage
 
         MapContainer.Children.Insert(0, VinhKhanhMap);
 
-        // 🔥 Gọi API Backend, chỉ Fallback về DB nếu API chết / rỗng
-        _poisFromApi = await _apiService.GetPoisAsync();
-        if (_poisFromApi == null || _poisFromApi.Count == 0)
-        {
-            _poisFromApi = await _poiRepository.GetAllPoisAsync();
-        }
+        // 🔥 LOAD DATABASE LOCAL (Fallback)
+        _poisFromApi = await _poiRepository.GetAllPoisAsync();
 
         foreach (var poi in _poisFromApi)
         {

@@ -34,6 +34,7 @@ namespace VinhKhanhTour.Services
         {
             _currentCulture = culture;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLanguageCode)));
         }
 
         public string CurrentLanguageCode => _currentCulture.TwoLetterISOLanguageName;

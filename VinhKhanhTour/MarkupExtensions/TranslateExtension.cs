@@ -13,12 +13,10 @@ namespace VinhKhanhTour.MarkupExtensions
         {
             var key = Text ?? string.Empty;
 
-            // Use a converter-based binding to avoid building indexer paths in XAML.
-            // This lets keys contain any character (including ']' or quotes).
             return new Binding
             {
                 Mode = BindingMode.OneWay,
-                Path = ".", // pass the LocalizationResourceManager instance as the value
+                Path = nameof(Services.LocalizationResourceManager.CurrentLanguageCode), // Bind to a property that fires PropertyChanged
                 Source = LocalizationResourceManager.Instance,
                 Converter = new TranslateConverter(),
                 ConverterParameter = key,
@@ -30,7 +28,7 @@ namespace VinhKhanhTour.MarkupExtensions
         {
             public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
             {
-                var manager = value as VinhKhanhTour.Services.LocalizationResourceManager ?? VinhKhanhTour.Services.LocalizationResourceManager.Instance;
+                var manager = VinhKhanhTour.Services.LocalizationResourceManager.Instance;
                 var key = parameter?.ToString() ?? string.Empty;
                 try
                 {

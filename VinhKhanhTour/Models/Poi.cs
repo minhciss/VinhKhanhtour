@@ -57,8 +57,8 @@ namespace VinhKhanhTour.Models
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(ImageUrl))
-                    return "poi_placeholder.png";
+                if (string.IsNullOrWhiteSpace(ImageUrl) || ImageUrl == "poi_placeholder.png")
+                    return "vinh_khanh_food_street_banner.webp";
 
                 // Nếu là link online
                 if (ImageUrl.StartsWith("http"))
@@ -118,8 +118,8 @@ namespace VinhKhanhTour.Models
         // ================= DISPLAY =================
         [Ignore]
         public string DisplayImage =>
-            string.IsNullOrWhiteSpace(ImageUrl)
-                ? "poi_placeholder.png"
+            string.IsNullOrWhiteSpace(ImageUrl) || ImageUrl == "poi_placeholder.png"
+                ? "vinh_khanh_food_street_banner.webp"
                 : ImageUrl;
 
         [Ignore]

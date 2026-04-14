@@ -16,23 +16,16 @@ public class ApiService
 
     public async Task<List<Poi>> GetPoisAsync()
     {
-        try
-        {
-            var response = await _httpClient.GetAsync("/api/pois");
+        var response = await _httpClient.GetAsync("/api/pois");
 
-            if (!response.IsSuccessStatusCode)
-                return new List<Poi>();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            return JsonSerializer.Deserialize<List<Poi>>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<Poi>();
-        }
-        catch
-        {
+        if (!response.IsSuccessStatusCode)
             return new List<Poi>();
-        }
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<List<Poi>>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
     }
 }
