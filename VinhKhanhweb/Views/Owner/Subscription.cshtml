@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "Gói Dịch Vụ VIP";
+    Layout = "_OwnerLayout";
+    DateTime? expiryDate = ViewBag.ExpiryDate as DateTime?;
+    bool isActive = expiryDate.HasValue && expiryDate.Value > DateTime.UtcNow;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-star-fill text-warning me-2"></i> Gói Dịch Vụ VIP (Subscription)</h2>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Warning"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-x-circle-fill me-2"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <!-- Cột thông tin gói hiện tại -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4 text-center">
+                <div class="mb-3">
+                    @if (isActive)
+                    {
+                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-check-lg fs-1"></i>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-lock-fill fs-1"></i>
+                        </div>
+                    }
+                </div>
+                
+                <h4 class="fw-bold mb-3">Tình Trạng Gói</h4>
+                
+                @if (isActive)
+                {
+                    <p class="text-success fw-bold fs-5 mb-1">ĐANG KÍCH HOẠT</p>
+                    <p class="text-muted">Hạn sử dụng đến: <br/><strong class="text-dark">@expiryDate.Value.ToString("dd/MM/yyyy HH:mm")</strong></p>
+                    <div class="alert alert-info mt-3 text-start bg-info bg-opacity-10 border-0">
+                        <i class="bi bi-info-circle-fill me-2"></i> Bạn hiện có quyền đăng địa điểm mới không giới hạn và được hệ thống Auto-Approve ngay lập tức.
+                    </div>
+                }
+                else
+                {
+                    <p class="text-danger fw-bold fs-5 mb-1">CHƯA CÓ GÓI HOẶC ĐÃ HẾT HẠN</p>
+                    @if (expiryDate.HasValue)
+                    {
+                        <p class="text-muted">Gói cũ đã hết hạn vào: <br/><strong class="text-dark">@expiryDate.Value.ToString("dd/MM/yyyy")</strong></p>
+                    }
+                    <div class="alert alert-warning mt-3 text-start bg-warning bg-opacity-10 border-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Bạn chưa thể thêm địa điểm mới. Vui lòng thanh toán gói bên dưới.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột thanh toán gói -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+                <h4 class="fw-bold"><i class="bi bi-cart3 me-2"></i> Bảng Giá Gói Dịch Vụ</h4>
+                <p class="text-muted mb-0">Trả phí một lần, sử dụng mượt mà không cần duyệt bài qua Admin.</p>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <!-- Gói 1 Tháng -->
+                    <div class="col-md-6">
+                        <div class="border rounded-4 p-4 position-relative h-100 d-flex flex-column transition-hover hover-shadow" style="border-color: #e2e8f0 !important;">
+                            <div class="mb-4">
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold mb-3">1 Tháng</span>
+                                <div class="d-flex align-items-end">
+                                    <h2 class="fw-bold mb-0 text-dark">50.000<small class="fs-6 text-muted fw-normal">đ</small></h2>
+                                    <span class="text-muted ms-1 mb-1">/tháng</span>
+                                </div>
+                            </div>
+                            <ul class="list-unstyled mb-4 flex-grow-1">
+                                <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Thêm POI tự động duyệt (Auto-Approve)</li>
+                                <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Quản lý âm thanh đa ngôn ngữ</li>
+                                <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Xuất mã QR gian hàng</li>
+                            </ul>
+                            <form method="post" action="@Url.Action("PaySubscription", "Owner")">
+                                <input type="hidden" name="months" value="1" />
+                                <button type="submit" class="btn btn-outline-primary w-100 rounded-pill py-2 fw-semibold">
+                                    <i class="bi bi-credit-card me-2"></i>Thanh toán 1 Tháng
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Gói 1 Năm -->
+                    <div class="col-md-6">
+                        <div class="border rounded-4 p-4 position-relative h-100 d-flex flex-column transition-hover shadow-sm" style="border-color: #2a5298 !important; background-color: #f8faff;">
+                            <div class="position-absolute align-items-center d-flex justify-content-center" style="top: -12px; right: 20px;">
+                                <span class="badge bg-danger rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-stars"></i> Tiết kiệm 16%</span>
+                            </div>
+                            <div class="mb-4">
+                                <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-semibold mb-3" style="background: linear-gradient(135deg, #1e3c72, #2a5298) !important;">1 Năm (12 Tháng)</span>
+                                <div class="d-flex align-items-end">
+                                    <h2 class="fw-bold mb-0 text-primary">500.000<small class="fs-6 text-muted fw-normal">đ</small></h2>
+                                    <span class="text-muted ms-1 mb-1">/năm</span>
+                                </div>
+                            </div>
+                            <ul class="list-unstyled mb-4 flex-grow-1">
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Thêm POI tự động duyệt (Auto-Approve)</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Ưu tiên hiển thị trên APP MAUI</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Quản lý âm thanh đa ngôn ngữ</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Xuất mã QR gian hàng</li>
+                            </ul>
+                            <form method="post" action="@Url.Action("PaySubscription", "Owner")">
+                                <input type="hidden" name="months" value="12" />
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold border-0" style="background: linear-gradient(135deg, #1e3c72, #2a5298);">
+                                    <i class="bi bi-lightning-charge-fill me-2"></i>Thanh toán 1 Năm
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-hover {
+        transition: all 0.3s ease;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transform: translateY(-3px);
+    }
+</style>

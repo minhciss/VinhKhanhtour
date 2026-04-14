@@ -37,8 +37,52 @@ public class AuthController : ControllerBase
             user.Email,
             user.Role,
             user.FullName,
-            user.Status
+            user.Status,
+            user.SubscriptionExpiryDate
         });
+    }
+
+    // ────────────────────────────────────────
+    // GET /api/auth/users/{id}
+    // ────────────────────────────────────────
+    [HttpGet("users/{id}")]
+    public IActionResult GetUser(int id)
+    {
+        var user = _context.AppUsers.Find(id);
+        if (user == null) return NotFound();
+        return Ok(new
+        {
+            user.Id,
+            user.Username,
+            user.Email,
+            user.Role,
+            user.FullName,
+            user.Status,
+            user.SubscriptionExpiryDate
+        });
+    }
+
+    // ────────────────────────────────────────
+    // POST /api/auth/users/{id}/subscribe
+    // ────────────────────────────────────────
+    [HttpPost("users/{id}/subscribe")]
+    public async Task<IActionResult> Subscribe(int id, [FromBody] SubscribeRequest req)
+    {
+        var user = _context.AppUsers.Find(id);
+        if (user == null) return NotFound();
+
+        if (user.Role != "Owner")
+            return BadRequest("Chỉ Owner mới có thể đăng ký gói");
+
+        // Nếu gia hạn từ ngày đăng ký cũ hoặc từ hôm nay
+        DateTime baseDate = user.SubscriptionExpiryDate > DateTime.UtcNow 
+            ? user.SubscriptionExpiryDate.Value 
+            : DateTime.UtcNow;
+
+        user.SubscriptionExpiryDate = baseDate.AddMonths(req.Months);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"Đã gia hạn thêm {req.Months} tháng thành công", expireDate = user.SubscriptionExpiryDate });
     }
 
     // ────────────────────────────────────────
@@ -164,4 +208,9 @@ public class RegisterOwnerRequest
 public class ApproveRequest
 {
     public bool Approve { get; set; }
+}
+
+public class SubscribeRequest
+{
+    public int Months { get; set; } = 1;
 }

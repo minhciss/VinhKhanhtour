@@ -55,9 +55,26 @@ public class OwnerController : Controller
     // CREATE
     // ─────────────────────────────────────
     [HttpGet]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
         var check = CheckOwner(); if (check != null) return check;
+
+        // Bắt buộc mua gói trước
+        var ownerId = GetOwnerId();
+        var res = await _http.GetAsync($"api/auth/users/{ownerId}");
+        if (res.IsSuccessStatusCode)
+        {
+            var userStr = await res.Content.ReadAsStringAsync();
+            var userObj = System.Text.Json.JsonDocument.Parse(userStr);
+            var expiry = userObj.RootElement.GetProperty("subscriptionExpiryDate").GetString();
+            
+            if (string.IsNullOrEmpty(expiry) || DateTime.Parse(expiry) < DateTime.UtcNow)
+            {
+                TempData["Warning"] = "Bạn cần đăng ký gói dịch vụ để có thể thêm địa điểm mới.";
+                return RedirectToAction("Subscription");
+            }
+        }
+
         return View();
     }
 
@@ -67,14 +84,18 @@ public class OwnerController : Controller
         var check = CheckOwner(); if (check != null) return check;
 
         poi.OwnerId = GetOwnerId();
-        poi.Status = "Pending";   // Phải chờ Admin duyệt
-        poi.IsActive = false;
-
+        // Server CMS sẽ tự động xử lý Status = Approved.
+        
         var res = await _http.PostAsJsonAsync("api/pois", poi);
         if (res.IsSuccessStatusCode)
         {
-            TempData["Success"] = "Đã gửi yêu cầu thêm địa điểm. Vui lòng chờ Admin phê duyệt!";
+            TempData["Success"] = "Đã đăng địa điểm mới. Hệ thống tự động duyệt do Cửa hàng đang có gói VIP!";
             return RedirectToAction("Index");
+        }
+        else if (res.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            TempData["Error"] = await res.Content.ReadAsStringAsync();
+            return RedirectToAction("Subscription");
         }
 
         ViewBag.Error = await res.Content.ReadAsStringAsync();
@@ -266,5 +287,56 @@ public class OwnerController : Controller
         ViewBag.StatsList = statsList;
 
         return View();
+    }
+
+    // ─────────────────────────────────────
+    // GÓI DỊCH VỤ VIP (SUBSCRIPTION)
+    // ─────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> Subscription()
+    {
+        var check = CheckOwner(); if (check != null) return check;
+        var ownerId = GetOwnerId();
+        ViewBag.OwnerName = HttpContext.Session.GetString("FullName") ?? "Owner";
+
+        try
+        {
+            var res = await _http.GetAsync($"api/auth/users/{ownerId}");
+            if (res.IsSuccessStatusCode)
+            {
+                var userStr = await res.Content.ReadAsStringAsync();
+                var userObj = System.Text.Json.JsonDocument.Parse(userStr);
+                var expiryStr = userObj.RootElement.GetProperty("subscriptionExpiryDate").GetString();
+                
+                if (!string.IsNullOrEmpty(expiryStr))
+                {
+                    ViewBag.ExpiryDate = DateTime.Parse(expiryStr);
+                }
+            }
+        }
+        catch { }
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> PaySubscription(int months)
+    {
+        var check = CheckOwner(); if (check != null) return check;
+        var ownerId = GetOwnerId();
+
+        var payload = new { months = months };
+        var res = await _http.PostAsJsonAsync($"api/auth/users/{ownerId}/subscribe", payload);
+
+        if (res.IsSuccessStatusCode)
+        {
+            TempData["Success"] = $"Thanh toán thành công gói {months} tháng! Bây giờ bạn đã có thể bắt đầu đăng địa điểm.";
+        }
+        else
+        {
+            TempData["Error"] = "Có lỗi xảy ra khi đăng ký gói.";
+        }
+
+        return RedirectToAction("Subscription");
     }
 }

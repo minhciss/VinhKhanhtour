@@ -20,4 +20,7 @@ public class AppUser
 
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Gói VIP (chỉ áp dụng cho Owner)
+    public DateTime? SubscriptionExpiryDate { get; set; }
 }

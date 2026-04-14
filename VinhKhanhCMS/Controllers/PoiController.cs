@@ -127,6 +127,19 @@ public class PoiController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        var owner = await _context.AppUsers.FindAsync(poi.OwnerId);
+        if (owner == null) return NotFound("Không tìm thấy Owner");
+
+        // Bắt buộc phải mua gói mới được tạo POI (Gói phải còn hạn)
+        if (owner.SubscriptionExpiryDate == null || owner.SubscriptionExpiryDate < DateTime.UtcNow)
+        {
+            return StatusCode(403, "Bạn phải đăng ký mua Gói Dịch Vụ / VIP để có thể đăng địa điểm mới.");
+        }
+
+        // Tự động Approved vì đã đóng tiền
+        poi.Status = "Approved";
+        poi.IsActive = true;
+
         _context.Pois.Add(poi);
         await _context.SaveChangesAsync();
 
