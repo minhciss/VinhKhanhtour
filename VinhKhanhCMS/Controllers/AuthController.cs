@@ -119,10 +119,8 @@ public class AuthController : ControllerBase
     [HttpPost("seed-admin")]
     public async Task<IActionResult> SeedAdmin([FromHeader(Name = "X-Setup-Key")] string? setupKey)
     {
-        // Bảo vệ bằng secret key — set trong appsettings hoặc env var
-        var expectedKey = _context.Database.GetConnectionString()?.GetHashCode().ToString()
-                          ?? "vinhkhanh-setup-2026";
-        if (setupKey != expectedKey && setupKey != "vinhkhanh-setup-2026")
+        // Bảo vệ bằng secret key cố định — chỉ người biết key mới tạo được admin
+        if (setupKey != "vinhkhanh-setup-2026")
             return Unauthorized("Thiếu hoặc sai X-Setup-Key header");
 
         if (_context.AppUsers.Any(u => u.Role == "Admin"))
