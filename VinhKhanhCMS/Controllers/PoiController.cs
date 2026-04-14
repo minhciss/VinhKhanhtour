@@ -32,6 +32,31 @@ public class PoiController : ControllerBase
         return $"{Request.Scheme}://{Request.Host}";
     }
 
+    /// <summary>
+    /// Sửa URL ảnh/audio: thay localhost bằng production URL,
+    /// và gắn baseUrl vào nếu chỉ là đường dẫn tương đối.
+    /// </summary>
+    private string FixUrl(string? url, string baseUrl)
+    {
+        if (string.IsNullOrEmpty(url)) return string.Empty;
+
+        // Tự động thay localhost/127.0.0.1 bằng URL server thử
+        if (url.Contains("localhost") || url.Contains("127.0.0.1"))
+        {
+            var uri = new Uri(url);
+            url = baseUrl + uri.PathAndQuery;
+            return url;
+        }
+
+        // Gắn baseUrl nếu đường dẫn tương đối
+        if (!url.StartsWith("http"))
+        {
+            url = url.StartsWith("/") ? baseUrl + url : baseUrl + "/images/" + url;
+        }
+
+        return url;
+    }
+
     // 🔍 Lấy tất cả POI — có thể lọc theo ?status=Pending&ownerId=5
     [HttpGet]
     public IActionResult GetAll([FromQuery] string? status, [FromQuery] int? ownerId)
@@ -53,18 +78,11 @@ public class PoiController : ControllerBase
 
         foreach (var poi in data)
         {
-            if (!string.IsNullOrEmpty(poi.ImageUrl) && !poi.ImageUrl.StartsWith("http"))
-            {
-                if (poi.ImageUrl.StartsWith("/"))
-                    poi.ImageUrl = baseUrl + poi.ImageUrl;
-                else
-                    poi.ImageUrl = baseUrl + "/images/" + poi.ImageUrl;
-            }
+            poi.ImageUrl = FixUrl(poi.ImageUrl, baseUrl);
 
             if (poi.Translations != null)
                 foreach (var t in poi.Translations)
-                    if (!string.IsNullOrEmpty(t.AudioUrl) && !t.AudioUrl.StartsWith("http"))
-                        t.AudioUrl = baseUrl + t.AudioUrl;
+                    t.AudioUrl = FixUrl(t.AudioUrl, baseUrl);
         }
 
         return Ok(data);
@@ -107,24 +125,11 @@ public class PoiController : ControllerBase
 
         var baseUrl = GetBaseUrl();
 
-        if (!string.IsNullOrEmpty(poi.ImageUrl) && !poi.ImageUrl.StartsWith("http"))
-        {
-            if (poi.ImageUrl.StartsWith("/"))
-                poi.ImageUrl = baseUrl + poi.ImageUrl;
-            else
-                poi.ImageUrl = baseUrl + "/images/" + poi.ImageUrl;
-        }
+        poi.ImageUrl = FixUrl(poi.ImageUrl, baseUrl);
 
         if (poi.Translations != null)
-        {
             foreach (var t in poi.Translations)
-            {
-                if (!string.IsNullOrEmpty(t.AudioUrl) && !t.AudioUrl.StartsWith("http"))
-                {
-                    t.AudioUrl = baseUrl + t.AudioUrl;
-                }
-            }
-        }
+                t.AudioUrl = FixUrl(t.AudioUrl, baseUrl);
 
         return Ok(poi);
     }
