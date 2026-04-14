@@ -89,12 +89,31 @@ public class OwnerController : Controller
     {
         var check = CheckOwner(); if (check != null) return check;
 
-        var poi = await _http.GetFromJsonAsync<Poi>($"api/pois/{id}");
+        Poi? poi = null;
+        try
+        {
+            var poiResp = await _http.GetAsync($"api/pois/{id}");
+            if (poiResp.IsSuccessStatusCode)
+                poi = await poiResp.Content.ReadFromJsonAsync<Poi>();
+        }
+        catch { }
+
         if (poi == null || poi.OwnerId != GetOwnerId())
             return Forbid();
 
-        poi.Translations = await _http.GetFromJsonAsync<List<PoiTranslation>>(
-            $"api/pois/{id}/translations") ?? new List<PoiTranslation>();
+        // Lấy translations — bọc try-catch riêng, không crash nếu CMS 500
+        try
+        {
+            var transResp = await _http.GetAsync($"api/pois/{id}/translations");
+            poi.Translations = transResp.IsSuccessStatusCode
+                ? await transResp.Content.ReadFromJsonAsync<List<PoiTranslation>>() ?? new()
+                : new();
+        }
+        catch
+        {
+            poi.Translations = new();
+            TempData["Error"] = "Không thể tải danh sách audio. Vui lòng thử lại.";
+        }
 
         ViewBag.OwnerName = HttpContext.Session.GetString("FullName") ?? "Owner";
         ViewBag.CmsBaseUrl = _cmsBaseUrl;

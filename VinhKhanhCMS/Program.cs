@@ -22,6 +22,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<TtsService>();
+builder.Services.AddHttpClient(); // ✅ Cần thiết cho IHttpClientFactory trong TranslationController
 
 var app = builder.Build();
 
