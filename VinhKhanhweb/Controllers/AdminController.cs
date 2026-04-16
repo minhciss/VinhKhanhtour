@@ -212,16 +212,26 @@ public class AdminController : Controller
         {
             var json = await _http.GetFromJsonAsync<JsonElement>("api/stats/overview");
 
-            vm.TotalUnlocks  = json.GetProperty("totalUnlocks").GetInt32();
-            vm.ActiveDevices = json.GetProperty("activeDevices").GetInt32();
-            vm.BusiestDay    = json.GetProperty("busiestDay").GetString() ?? "";
-            vm.BusiestCount  = json.GetProperty("busiestCount").GetInt32();
+            vm.TotalUnlocks     = json.GetProperty("totalUnlocks").GetInt32();
+            vm.ActiveDevices    = json.GetProperty("activeDevices").GetInt32();
+            vm.BusiestDay       = json.GetProperty("busiestDay").GetString() ?? "";
+            vm.BusiestCount     = json.GetProperty("busiestCount").GetInt32();
+            vm.BusiestHour      = json.GetProperty("busiestHour").GetString() ?? "";
+            vm.BusiestHourCount = json.GetProperty("busiestHourCount").GetInt32();
 
             vm.WeekdayStats = json.GetProperty("weekdayStats")
                 .EnumerateArray()
                 .Select(e => new WeekdayStat
                 {
                     Day   = e.GetProperty("day").GetString() ?? "",
+                    Count = e.GetProperty("count").GetInt32()
+                }).ToList();
+
+            vm.HourlyStats = json.GetProperty("hourlyStats")
+                .EnumerateArray()
+                .Select(e => new HourlyStat
+                {
+                    Hour  = e.GetProperty("hour").GetString() ?? "",
                     Count = e.GetProperty("count").GetInt32()
                 }).ToList();
 
@@ -240,6 +250,16 @@ public class AdminController : Controller
                 {
                     Date  = e.GetProperty("date").GetString() ?? "",
                     Count = e.GetProperty("count").GetInt32()
+                }).ToList();
+
+            vm.ActiveSessions = json.GetProperty("activeSessions")
+                .EnumerateArray()
+                .Select(e => new ActiveSession
+                {
+                    SessionId   = e.GetProperty("sessionId").GetString() ?? "",
+                    UnlockCount = e.GetProperty("unlockCount").GetInt32(),
+                    LastSeen    = e.GetProperty("lastSeen").GetString() ?? "",
+                    ExpiresAt   = e.GetProperty("expiresAt").GetString() ?? ""
                 }).ToList();
         }
         catch

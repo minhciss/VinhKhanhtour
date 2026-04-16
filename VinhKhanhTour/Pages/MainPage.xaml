@@ -34,27 +34,8 @@
 
                 <VerticalStackLayout Padding="20,20,20,20" Spacing="16">
                     
-                    <!-- 🔍 Search Bar -->
-                    <Border StrokeShape="RoundRectangle 24" 
-                            Padding="4,0" 
-                            StrokeThickness="1" 
-                            Stroke="{AppThemeBinding Light=#E8D5C8, Dark=#444444}"
-                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}">
-                        <Border.Shadow>
-                            <Shadow Brush="Black" Opacity="0.06" Offset="0,2" Radius="8" />
-                        </Border.Shadow>
-                        <SearchBar x:Name="PoiSearchBar" 
-                               Placeholder="{local:Translate 'Tìm quán ốc, lẩu, sushi...'}" 
-                               FontSize="14"
-                               TextColor="{AppThemeBinding Light={StaticResource DarkOnLightBackground}, Dark={StaticResource LightOnDarkBackground}}"
-                               BackgroundColor="Transparent"
-                               CancelButtonColor="{StaticResource Primary}"
-                               SearchCommand="{Binding SearchCommand}"
-                               SearchCommandParameter="{Binding Source={x:Reference PoiSearchBar}, Path=Text}"/>
-                    </Border>
-
-                    <!-- 🏷️ Filter Chips -->
-                  
+           
+ 
 
                     <!-- 🚀 Start Tour CTA Button -->
                     <Border StrokeShape="RoundRectangle 28" StrokeThickness="0" Padding="0" HeightRequest="56">
@@ -275,7 +256,6 @@
                                 <TapGestureRecognizer Command="{Binding PlayNarrationCommand}" />
                             </Border.GestureRecognizers>
                             <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8">
-                                <Label Text="▶️" FontSize="18" VerticalOptions="Center" />
                                 <Label Text="{local:Translate 'Nghe Audio'}" FontSize="16" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </Border>
@@ -299,7 +279,7 @@
                                 <TapGestureRecognizer Command="{Binding NavigateToMapCommand}" />
                             </Border.GestureRecognizers>
                             <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8">
-                                <Label Text="🗺️" FontSize="18" VerticalOptions="Center" />
+                      
                                 <Label Text="{local:Translate 'Bản đồ'}" FontSize="16" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </Border>
