@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
+using System.Text.Json;
 using VinhKhanhadmin.Models;
 
 public class AdminController : Controller
@@ -197,5 +198,56 @@ public class AdminController : Controller
         var check = CheckAdmin(); if (check != null) return check;
         await _http.DeleteAsync($"api/pois/{poiId}/translations/{id}");
         return RedirectToAction("Edit", new { id = poiId });
+    }
+
+    // ─────────────────────────────────────────
+    // STATISTICS
+    // ─────────────────────────────────────────
+    public async Task<IActionResult> Statistics()
+    {
+        var check = CheckAdmin(); if (check != null) return check;
+
+        var vm = new StatsViewModel();
+        try
+        {
+            var json = await _http.GetFromJsonAsync<JsonElement>("api/stats/overview");
+
+            vm.TotalUnlocks  = json.GetProperty("totalUnlocks").GetInt32();
+            vm.ActiveDevices = json.GetProperty("activeDevices").GetInt32();
+            vm.BusiestDay    = json.GetProperty("busiestDay").GetString() ?? "";
+            vm.BusiestCount  = json.GetProperty("busiestCount").GetInt32();
+
+            vm.WeekdayStats = json.GetProperty("weekdayStats")
+                .EnumerateArray()
+                .Select(e => new WeekdayStat
+                {
+                    Day   = e.GetProperty("day").GetString() ?? "",
+                    Count = e.GetProperty("count").GetInt32()
+                }).ToList();
+
+            vm.TopPois = json.GetProperty("topPois")
+                .EnumerateArray()
+                .Select(e => new PoiStat
+                {
+                    PoiId   = e.GetProperty("poiId").GetInt32(),
+                    PoiName = e.GetProperty("poiName").GetString() ?? "",
+                    Count   = e.GetProperty("count").GetInt32()
+                }).ToList();
+
+            vm.Last7Days = json.GetProperty("last7Days")
+                .EnumerateArray()
+                .Select(e => new DailyStat
+                {
+                    Date  = e.GetProperty("date").GetString() ?? "",
+                    Count = e.GetProperty("count").GetInt32()
+                }).ToList();
+        }
+        catch
+        {
+            TempData["Error"] = "Không thể tải dữ liệu thống kê. Vui lòng thử lại.";
+        }
+
+        ViewBag.AdminName = HttpContext.Session.GetString("FullName") ?? "Admin";
+        return View(vm);
     }
 }
