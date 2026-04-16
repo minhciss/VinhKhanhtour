@@ -124,9 +124,9 @@
             <span class="badge rounded-pill px-3 py-2" style="background:#10b981;">
                 <i class="bi bi-phone-fill me-1"></i>Thiết bị đang hoạt động
             </span>
-            <span class="badge bg-success ms-1">@Model.ActiveDevices phiên</span>
+            <span class="badge bg-success ms-1">@Model.ActiveDevices thiết bị</span>
             <span class="ms-auto text-white-50 small">
-                <i class="bi bi-info-circle me-1"></i>Phiên mở khóa audio còn hạn trong 24h — có thể từ lần test trước
+                <i class="bi bi-info-circle me-1"></i>Cập nhật theo heartbeat mỗi 15 giây · Tự động ẩn sau 30 giây không ping
             </span>
         </div>
         <div class="table-responsive">
@@ -134,10 +134,9 @@
                 <thead>
                     <tr class="stat-thead">
                         <th>#</th>
-                        <th><i class="bi bi-key me-1"></i>Session ID</th>
-                        <th>Lượt mở khóa</th>
+                        <th><i class="bi bi-phone me-1"></i>Device ID (ẩn danh)</th>
+                        <th>Trạng thái</th>
                         <th>Hoạt động lần cuối</th>
-                        <th>Hết hạn lúc</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -149,9 +148,15 @@
                             <td>
                                 <code class="text-success" style="font-size:.85rem;">@s.SessionId</code>
                             </td>
-                            <td><span class="badge bg-primary">@s.UnlockCount</span></td>
-                            <td class="text-white-50 small">@s.LastSeen</td>
-                            <td class="text-warning small">@s.ExpiresAt</td>
+                            <td>
+                                <span class="badge" style="background:#10b981;">
+                                    <i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>Online
+                                </span>
+                            </td>
+                            <td class="text-white-50 small">
+                                <i class="bi bi-clock me-1"></i>@s.LastSeen
+                                <span class="ms-1 text-warning small">(@s.ExpiresAt)</span>
+                            </td>
                         </tr>
                         sIdx++;
                     }

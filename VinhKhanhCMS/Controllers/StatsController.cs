@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using VinhKhanhCMS.Data;
+using VinhKhanhCMS.Services;
 
 namespace VinhKhanhCMS.Controllers;
 
@@ -8,7 +9,13 @@ namespace VinhKhanhCMS.Controllers;
 public class StatsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public StatsController(AppDbContext db) => _db = db;
+    private readonly SessionTracker _tracker;
+
+    public StatsController(AppDbContext db, SessionTracker tracker)
+    {
+        _db     = db;
+        _tracker = tracker;
+    }
 
     /// <summary>
     /// GET /api/stats/overview — thống kê hoạt động du khách (không có thông tin cá nhân)
@@ -22,23 +29,16 @@ public class StatsController : ControllerBase
         // ── 1. Tổng lượt mở khóa ──
         var totalUnlocks = _db.UserPoiUnlocks.Count();
 
-        // ── 2. Phiên đang hoạt động (ExpiresAt > now) ──
-        var activeRaw = _db.UserPoiUnlocks
-            .Where(u => u.ExpiresAt > now)
-            .AsEnumerable()
-            .GroupBy(u => u.SessionKey)
-            .Select(g => new
+        // ── 2. Thiết bị đang hoạt động (từ heartbeat, 30 giây) ──
+        var activeDevices = _tracker.GetActiveCount(30);
+        var activeSessions = _tracker.GetActiveDevices(30)
+            .Select(d => new
             {
-                // Hiển thị 12 ký tự đầu + "…" để không lộ toàn bộ key
-                sessionId   = g.Key.Length > 12 ? g.Key[..12] + "…" : g.Key,
-                unlockCount = g.Count(),
-                lastSeen    = g.Max(u => u.UnlockedAt).AddHours(7).ToString("dd/MM HH:mm"),
-                expiresAt   = g.Max(u => u.ExpiresAt).AddHours(7).ToString("dd/MM HH:mm")
-            })
-            .OrderByDescending(x => x.lastSeen)
-            .ToList();
-
-        var activeDevices = activeRaw.Count;
+                sessionId   = d.DeviceId,
+                unlockCount = 1,          // heartbeat-only: mỗi device là 1 kết nối
+                lastSeen    = d.LastSeen,
+                expiresAt   = d.SecondsAgo + "s trước"
+            }).ToList();
 
         // ── 3. Thống kê theo ngày trong tuần (30 ngày, UTC+7) ──
         var dayNames = new[] { "CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };
@@ -111,7 +111,7 @@ public class StatsController : ControllerBase
         {
             totalUnlocks,
             activeDevices,
-            activeSessions   = activeRaw,
+            activeSessions,
             weekdayStats,
             hourlyStats,
             topPois,

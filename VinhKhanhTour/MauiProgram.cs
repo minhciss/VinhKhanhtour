@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Toolkit.Hosting;
 using Microsoft.Maui.Controls.Hosting;
@@ -45,6 +45,7 @@ namespace VinhKhanhTour
             builder.Services.AddTransient<VinhKhanhTour.Pages.MapPage>();
             builder.Services.AddSingleton(AudioManager.Current);
             builder.Services.AddSingleton<ApiService>();
+            builder.Services.AddSingleton<HeartbeatService>(); // ✅ Heartbeat tracking
 
             return builder.Build();
         }

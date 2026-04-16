@@ -104,4 +104,28 @@ public class ApiService
         if (string.IsNullOrWhiteSpace(url)) return string.Empty;
         return url;
     }
+
+    /// <summary>
+    /// Heartbeat ping — gửi mỗi 15 giây để báo với CMS rằng thiết bị đang online.
+    /// Silent fail — không ảnh hưởng trải nghiệm app nếu mạng lỗi.
+    /// </summary>
+    public async Task PingAsync(string deviceId)
+    {
+        try
+        {
+            var payload = new StringContent(
+                System.Text.Json.JsonSerializer.Serialize(new { deviceId }),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await _httpClient.PostAsync("/api/sessions/ping", payload, cts.Token);
+
+            System.Diagnostics.Debug.WriteLine($"[Heartbeat] Ping sent. DeviceId: {deviceId[..Math.Min(8, deviceId.Length)]}...");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Heartbeat] Ping failed (silent): {ex.Message}");
+        }
+    }
 }
