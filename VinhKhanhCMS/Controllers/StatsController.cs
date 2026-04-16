@@ -107,6 +107,24 @@ public class StatsController : ControllerBase
         var busiest    = weekdayStats.OrderByDescending(d => d.count).First();
         var busiestHr  = hourlyStats.OrderByDescending(h => h.count).First();
 
+        // ── 8. Ma trận 7×24 (dayOfWeek × hour) cho heatmap ──
+        var rawMatrix = _db.UserPoiUnlocks
+            .Where(u => u.UnlockedAt >= since)
+            .AsEnumerable()
+            .GroupBy(u => new
+            {
+                Day  = (int)u.UnlockedAt.AddHours(7).DayOfWeek,  // 0=CN, 1=T2 ... 6=T7
+                Hour = u.UnlockedAt.AddHours(7).Hour
+            })
+            .Select(g => new { g.Key.Day, g.Key.Hour, Count = g.Count() })
+            .ToList();
+
+        var weekHourMatrix = Enumerable.Range(0, 7)
+            .Select(d => Enumerable.Range(0, 24)
+                .Select(h => rawMatrix.FirstOrDefault(x => x.Day == d && x.Hour == h)?.Count ?? 0)
+                .ToArray())
+            .ToArray();
+
         return Ok(new
         {
             totalUnlocks,
@@ -116,6 +134,7 @@ public class StatsController : ControllerBase
             hourlyStats,
             topPois,
             last7Days,
+            weekHourMatrix,
             busiestDay       = busiest.day,
             busiestCount     = busiest.count,
             busiestHour      = busiestHr.hour,

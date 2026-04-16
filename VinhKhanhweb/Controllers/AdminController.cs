@@ -261,6 +261,11 @@ public class AdminController : Controller
                     LastSeen    = e.GetProperty("lastSeen").GetString() ?? "",
                     ExpiresAt   = e.GetProperty("expiresAt").GetString() ?? ""
                 }).ToList();
+
+            vm.WeekHourMatrix = json.GetProperty("weekHourMatrix")
+                .EnumerateArray()
+                .Select(row => row.EnumerateArray().Select(c => c.GetInt32()).ToArray())
+                .ToArray();
         }
         catch
         {

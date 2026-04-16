@@ -235,55 +235,13 @@
     <div class="col-12 col-xl-6">
         <div class="dark-card h-100">
             <div class="dark-card-header">
-                <span class="badge rounded-pill px-3 py-2" style="background:#f59e0b;">
-                    <i class="bi bi-table me-1"></i>Xếp hạng ngày trong tuần
+                <span class="badge rounded-pill px-3 py-2" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+                    <i class="bi bi-grid-3x3 me-1"></i>Heatmap lưu lượng theo thời gian
                 </span>
+                <small class="text-white-50 ms-2">(30 ngày gần đây)</small>
+                <h6 class="text-white mt-2 mb-0">Ngày / Giờ nào đông khách nhất?</h6>
             </div>
-            <div class="table-responsive">
-                <table class="table table-sm mb-0" style="color:#e2e8f0;">
-                    <thead>
-                        <tr class="stat-thead">
-                            <th style="width:40px;">#</th>
-                            <th>Ngày</th>
-                            <th style="width:80px;">Lượt</th>
-                            <th>Tỉ lệ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            var sortedDays = Model.WeekdayStats.OrderByDescending(d => d.Count).ToList();
-                            int dRank = 1;
-                        }
-                        @foreach (var day in sortedDays)
-                        {
-                            var pct = (int)Math.Round(day.Count * 100.0 / maxWeek);
-                            bool top = dRank == 1;
-                            <tr class="stat-row">
-                                <td>
-                                    @if (dRank == 1) { <span>🏆</span> }
-                                    else if (dRank == 2) { <span class="text-white-50">②</span> }
-                                    else if (dRank == 3) { <span class="text-white-50">③</span> }
-                                    else { <span class="text-white-50 small">@dRank</span> }
-                                </td>
-                                <td>
-                                    <strong class="@(top ? "text-warning" : "text-light")">@day.Day</strong>
-                                </td>
-                                <td>
-                                    <span class="fw-bold @(top ? "text-warning" : "text-light")">@day.Count</span>
-                                </td>
-                                <td>
-                                    <div class="progress" style="height:8px;background:rgba(255,255,255,.1);border-radius:99px;">
-                                        <div class="progress-bar @(top ? "" : "bg-secondary")"
-                                             style="width:@pct%;border-radius:99px;@(top ? "background:linear-gradient(90deg,#f59e0b,#fbbf24);" : "")">
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            dRank++;
-                        }
-                    </tbody>
-                </table>
-            </div>
+            <div id="heatmapContainer"></div>
         </div>
     </div>
 </div>
@@ -352,18 +310,163 @@
         padding: .6rem .75rem;
         vertical-align: middle;
     }
+    /* ── Heatmap ── */
+    .hm-grid {
+        display: grid;
+        grid-template-columns: 52px repeat(24, 1fr);
+        gap: 3px;
+        font-size: .68rem;
+    }
+    .hm-label-row {
+        display: grid;
+        grid-template-columns: 52px repeat(24, 1fr);
+        gap: 3px;
+        margin-bottom: 3px;
+    }
+    .hm-hour-lbl {
+        color: rgba(255,255,255,.35);
+        text-align: center;
+        font-size: .6rem;
+        line-height: 1;
+        padding: 2px 0;
+    }
+    .hm-day-lbl {
+        color: rgba(255,255,255,.55);
+        font-size: .72rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 6px;
+        white-space: nowrap;
+    }
+    .hm-cell {
+        border-radius: 4px;
+        height: 22px;
+        cursor: default;
+        transition: transform .1s;
+        position: relative;
+    }
+    .hm-cell:hover {
+        transform: scale(1.35);
+        z-index: 10;
+    }
+    .hm-tooltip {
+        position: absolute;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(15,15,30,.95);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 8px;
+        padding: 5px 10px;
+        white-space: nowrap;
+        font-size: .75rem;
+        color: #e2e8f0;
+        pointer-events: none;
+        display: none;
+        z-index: 100;
+    }
+    .hm-cell:hover .hm-tooltip { display: block; }
+    .hm-legend {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 10px;
+        font-size: .7rem;
+        color: rgba(255,255,255,.4);
+    }
+    .hm-legend-swatch {
+        width: 18px;
+        height: 12px;
+        border-radius: 3px;
+    }
 </style>
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     // ── Dữ liệu từ server (JSON serialized, an toàn với Unicode) ──
-    const WEEK  = @Html.Raw(weekJson);
-    const TREND = @Html.Raw(trendJson);
-    const POI   = @Html.Raw(poiJson);
-    const HOUR  = @Html.Raw(hourJson);
+    const WEEK   = @Html.Raw(weekJson);
+    const TREND  = @Html.Raw(trendJson);
+    const POI    = @Html.Raw(poiJson);
+    const HOUR   = @Html.Raw(hourJson);
     const BUSIEST_DAY  = @Html.Raw(busiestDayJs);
     const BUSIEST_HOUR = @Html.Raw(busiestHourJs);
+    const MATRIX = @Html.Raw(JsonSerializer.Serialize(Model.WeekHourMatrix));
+
+    // ── Heatmap 7×24 ──
+    (function renderHeatmap() {
+        const days  = ['CN','T.2','T.3','T.4','T.5','T.6','T.7'];
+        const hours = Array.from({length:24}, (_,i) => i.toString().padStart(2,'0'));
+        const flat  = MATRIX.flat();
+        const maxVal = Math.max(...flat, 1);
+
+        function cellColor(v) {
+            const r = v / maxVal;
+            if (r === 0) return 'rgba(255,255,255,.05)';
+            if (r < .2)  return 'rgba(99,102,241,.25)';
+            if (r < .4)  return 'rgba(99,102,241,.45)';
+            if (r < .6)  return 'rgba(99,102,241,.65)';
+            if (r < .8)  return 'rgba(139,92,246,.85)';
+            return 'rgba(245,158,11,.95)'; // đỉnh cao điểm → vàng
+        }
+
+        const root = document.getElementById('heatmapContainer');
+
+        // Header hàng nhãn giờ
+        const headerRow = document.createElement('div');
+        headerRow.className = 'hm-label-row';
+        const emptyCorner = document.createElement('div');
+        headerRow.appendChild(emptyCorner);
+        hours.forEach(h => {
+            const el = document.createElement('div');
+            el.className = 'hm-hour-lbl';
+            el.textContent = parseInt(h) % 3 === 0 ? h : '';
+            headerRow.appendChild(el);
+        });
+        root.appendChild(headerRow);
+
+        // 7 hàng ngày
+        MATRIX.forEach((row, di) => {
+            const gridRow = document.createElement('div');
+            gridRow.className = 'hm-grid';
+
+            const dayLbl = document.createElement('div');
+            dayLbl.className = 'hm-day-lbl';
+            dayLbl.textContent = days[di];
+            gridRow.appendChild(dayLbl);
+
+            row.forEach((val, hi) => {
+                const cell = document.createElement('div');
+                cell.className = 'hm-cell';
+                cell.style.background = cellColor(val);
+                if (val > 0) {
+                    const tip = document.createElement('div');
+                    tip.className = 'hm-tooltip';
+                    tip.textContent = `${days[di]} ${hours[hi]}:00 — ${val} lượt`;
+                    cell.appendChild(tip);
+                }
+                gridRow.appendChild(cell);
+            });
+
+            root.appendChild(gridRow);
+        });
+
+        // Legend
+        const legend = document.createElement('div');
+        legend.className = 'hm-legend mt-3';
+        legend.innerHTML = `
+            <span>Thấp</span>
+            <div class="hm-legend-swatch" style="background:rgba(255,255,255,.05)"></div>
+            <div class="hm-legend-swatch" style="background:rgba(99,102,241,.25)"></div>
+            <div class="hm-legend-swatch" style="background:rgba(99,102,241,.50)"></div>
+            <div class="hm-legend-swatch" style="background:rgba(139,92,246,.85)"></div>
+            <div class="hm-legend-swatch" style="background:rgba(245,158,11,.95)"></div>
+            <span>Cao điểm</span>
+        `;
+        root.appendChild(legend);
+    })();
 
     // ── Cài đặt Chart.js mặc định ──
     Chart.defaults.color           = 'rgba(226,232,240,.8)';

@@ -9,11 +9,13 @@ public class StatsViewModel
     public string BusiestHour      { get; set; } = "";
     public int    BusiestHourCount { get; set; }
 
-    public List<WeekdayStat>   WeekdayStats   { get; set; } = new();
-    public List<HourlyStat>    HourlyStats    { get; set; } = new();
-    public List<PoiStat>       TopPois        { get; set; } = new();
-    public List<DailyStat>     Last7Days      { get; set; } = new();
-    public List<ActiveSession> ActiveSessions { get; set; } = new();
+    public List<WeekdayStat>   WeekdayStats    { get; set; } = new();
+    public List<HourlyStat>    HourlyStats     { get; set; } = new();
+    public List<PoiStat>       TopPois         { get; set; } = new();
+    public List<DailyStat>     Last7Days       { get; set; } = new();
+    public List<ActiveSession> ActiveSessions  { get; set; } = new();
+    /// <summary>Matrix [dayOfWeek 0=CN..6=T7][hour 0..23] = count</summary>
+    public int[][]             WeekHourMatrix  { get; set; } = Array.Empty<int[]>();
 }
 
 public class WeekdayStat
