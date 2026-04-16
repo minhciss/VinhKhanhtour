@@ -118,10 +118,22 @@ public class ApiService
                 System.Text.Encoding.UTF8,
                 "application/json");
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            await _httpClient.PostAsync("/api/sessions/ping", payload, cts.Token);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+            var response = await _httpClient.PostAsync("/api/sessions/ping", payload, cts.Token);
 
-            System.Diagnostics.Debug.WriteLine($"[Heartbeat] Ping sent. DeviceId: {deviceId[..Math.Min(8, deviceId.Length)]}...");
+            // Log cả HTTP status để dễ debug
+            System.Diagnostics.Debug.WriteLine(
+                $"[Heartbeat] Ping → {(int)response.StatusCode} {response.StatusCode}. DeviceId: {deviceId[..Math.Min(8, deviceId.Length)]}...");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[Heartbeat] Server response: {body[..Math.Min(200, body.Length)]}");
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            System.Diagnostics.Debug.WriteLine("[Heartbeat] Ping timeout (>8s) — CMS đang cold start?");
         }
         catch (Exception ex)
         {

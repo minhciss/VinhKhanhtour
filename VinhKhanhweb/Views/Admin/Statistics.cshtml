@@ -29,9 +29,14 @@
         <h4 class="mb-0 fw-bold text-white">Thống kê hoạt động du khách</h4>
         <small class="text-white-50">Dữ liệu tổng hợp · Không lưu thông tin cá nhân · UTC+7</small>
     </div>
-    <span class="ms-auto badge text-bg-secondary px-3 py-2 d-none d-md-inline-flex">
-        <i class="bi bi-clock me-1"></i>Cập nhật theo thời gian thực
-    </span>
+    <div class="ms-auto d-flex align-items-center gap-2">
+        <span class="badge text-bg-secondary px-3 py-2">
+            <i class="bi bi-arrow-clockwise me-1"></i>Tự làm mới sau <span id="refreshCountdown">30</span>s
+        </span>
+        <button class="btn btn-sm btn-outline-light" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Làm mới
+        </button>
+    </div>
 </div>
 
 <!-- ══ KPI CARDS (5 cards) ══ -->
@@ -488,5 +493,17 @@
     });
         </text>
     }
+
+    // ── Auto-refresh + countdown ──
+    let countdown = 30;
+    const countdownEl = document.getElementById('refreshCountdown');
+
+    setInterval(() => {
+        countdown--;
+        if (countdownEl) countdownEl.textContent = countdown;
+        if (countdown <= 0) {
+            location.reload();
+        }
+    }, 1000);
 </script>
 }
