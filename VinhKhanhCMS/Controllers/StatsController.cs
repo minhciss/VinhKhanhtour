@@ -46,6 +46,10 @@ public class StatsController : ControllerBase
         }
         try {
             result["subPayCount"] = _db.SubscriptionPayments.Count();
+            result["subPaySum"] = _db.SubscriptionPayments.Sum(p => (decimal?)p.AmountPaid) ?? -1;
+            result["subPaySample"] = _db.SubscriptionPayments.AsEnumerable()
+                .Select(p => new { p.Id, p.AmountPaid, p.PaidAt, p.PaidAt.Kind })
+                .Take(5).ToList();
         } catch (Exception ex2) {
             result["subPayError"] = ex2.Message;
         }
