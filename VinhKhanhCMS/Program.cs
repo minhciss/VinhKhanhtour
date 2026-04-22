@@ -32,6 +32,13 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    // Đảm bảo các cột mới này có trong DB vì trước đó chưa có trong file Migration
+    try {
+        db.Database.ExecuteSqlRaw("ALTER TABLE \"UserPoiUnlocks\" ADD COLUMN IF NOT EXISTS \"AmountPaid\" numeric NOT NULL DEFAULT 5000;");
+        db.Database.ExecuteSqlRaw("ALTER TABLE \"UserPoiUnlocks\" ADD COLUMN IF NOT EXISTS \"PaymentNote\" text NOT NULL DEFAULT 'Demo payment';");
+    } catch { }
+
     db.Database.Migrate();
 }
 
