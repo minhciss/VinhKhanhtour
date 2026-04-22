@@ -199,14 +199,20 @@ public class StatsController : ControllerBase
         }
         catch { /* fallback 0 nếu có lỗi bất kỳ */ }
 
-        // 9b. Doanh thu từ Owner mua VIP — safe fallback nếu bảng chưa migrate
+        // 9b. Doanh thu từ Owner mua VIP — dùng AsEnumerable trước tránh lỗi timezone
         var vipRevDict  = new Dictionary<string, decimal>();
         decimal totalVipRevenue = 0;
         try
         {
-            _db.SubscriptionPayments
+            var allVips = _db.SubscriptionPayments.AsEnumerable()
+                .Select(p => new {
+                    PaidAt = DateTime.SpecifyKind(p.PaidAt, DateTimeKind.Utc),
+                    p.AmountPaid
+                })
                 .Where(p => p.PaidAt >= since6Start)
-                .AsEnumerable()
+                .ToList();
+
+            allVips
                 .GroupBy(p => new { p.PaidAt.AddHours(7).Year, p.PaidAt.AddHours(7).Month })
                 .Select(g => new { key = $"{g.Key.Year:0000}-{g.Key.Month:00}", rev = g.Sum(p => p.AmountPaid) })
                 .ToList()
@@ -214,7 +220,7 @@ public class StatsController : ControllerBase
 
             totalVipRevenue = _db.SubscriptionPayments.Sum(p => (decimal?)p.AmountPaid) ?? 0;
         }
-        catch { /* SubscriptionPayments table may not exist yet — return 0 */ }
+        catch { /* fallback 0 nếu có lỗi bất kỳ */ }
 
         // 9c. Build 6 tháng liên tục, tháng không có doanh thu = 0
         var monthlyRevenue = months6.Select(m =>
