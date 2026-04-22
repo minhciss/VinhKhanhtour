@@ -117,7 +117,7 @@ public class AuthController : ControllerBase
             Email = req.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
             Role = "Owner",
-            Status = "Pending",      // Chờ Admin duyệt
+            Status = "Approved",     // Tự động duyệt — không cần Admin phê duyệt
             FullName = req.FullName,
             Phone = req.Phone,
             BusinessName = req.BusinessName,
@@ -127,7 +127,7 @@ public class AuthController : ControllerBase
 
         _context.AppUsers.Add(user);
         await _context.SaveChangesAsync();
-        return Ok(new { message = "Đăng ký thành công. Vui lòng chờ Admin phê duyệt." });
+        return Ok(new { message = "Đăng ký thành công. Bạn có thể đăng nhập ngay bây giờ." });
     }
 
     // ────────────────────────────────────────
