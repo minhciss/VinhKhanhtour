@@ -28,19 +28,13 @@ builder.Services.AddHttpClient(); // ✅ Cần thiết cho IHttpClientFactory tr
 var app = builder.Build();
 
 // ✅ Tự động apply migration khi khởi động — an toàn cho Render/production
-// Đảm bảo bảng SubscriptionPayments và các migration mới được tạo tự động
+// Migration EnsureUserPoiUnlocksColumns sẽ thêm AmountPaid, PaymentNote vào UserPoiUnlocks
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Đảm bảo các cột mới này có trong DB vì trước đó chưa có trong file Migration
-    try {
-        db.Database.ExecuteSqlRaw("ALTER TABLE \"UserPoiUnlocks\" ADD COLUMN IF NOT EXISTS \"AmountPaid\" numeric NOT NULL DEFAULT 5000;");
-        db.Database.ExecuteSqlRaw("ALTER TABLE \"UserPoiUnlocks\" ADD COLUMN IF NOT EXISTS \"PaymentNote\" text NOT NULL DEFAULT 'Demo payment';");
-    } catch { }
-
     db.Database.Migrate();
 }
+
 
 
 app.UseStaticFiles();

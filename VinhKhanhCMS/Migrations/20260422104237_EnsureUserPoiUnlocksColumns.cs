@@ -1,0 +1,34 @@
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace VinhKhanhCMS.Migrations
+{
+    /// <inheritdoc />
+    public partial class EnsureUserPoiUnlocksColumns : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            // Bảng UserPoiUnlocks được tạo thủ công bằng raw SQL ở lần deploy trước.
+            // Migration này đảm bảo 2 cột doanh thu luôn tồn tại trên mọi môi trường (local & Render).
+            // IF NOT EXISTS đảm bảo không lỗi nếu cột đã có.
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""UserPoiUnlocks""
+                    ADD COLUMN IF NOT EXISTS ""AmountPaid""  numeric        NOT NULL DEFAULT 5000;
+            ");
+
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""UserPoiUnlocks""
+                    ADD COLUMN IF NOT EXISTS ""PaymentNote"" text           NOT NULL DEFAULT 'Demo payment';
+            ");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.Sql(@"ALTER TABLE ""UserPoiUnlocks"" DROP COLUMN IF EXISTS ""AmountPaid"";");
+            migrationBuilder.Sql(@"ALTER TABLE ""UserPoiUnlocks"" DROP COLUMN IF EXISTS ""PaymentNote"";");
+        }
+    }
+}
