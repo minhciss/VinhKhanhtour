@@ -23,13 +23,22 @@ public class StatsController : ControllerBase
     {
         var result = new System.Collections.Generic.Dictionary<string, object>();
         try {
-            result["unlockCount"]  = _db.UserPoiUnlocks.Count();
+            result["unlockCount"]   = _db.UserPoiUnlocks.Count();
             result["amountPaidSum"] = _db.UserPoiUnlocks.Sum(u => (decimal?)u.AmountPaid) ?? -1;
             var rows = _db.UserPoiUnlocks.AsEnumerable()
-                .Select(u => new { u.Id, u.AmountPaid, u.UnlockedAt })
+                .Select(u => new { u.Id, u.AmountPaid, u.UnlockedAt, u.UnlockedAt.Kind })
                 .Take(5).ToList();
             result["sample5"]  = rows;
             result["columnOk"] = true;
+
+            // Test filter timezone
+            var since6Start = DateTime.SpecifyKind(
+                new DateTime(DateTime.UtcNow.AddHours(7).AddMonths(-5).Year,
+                             DateTime.UtcNow.AddHours(7).AddMonths(-5).Month, 1),
+                DateTimeKind.Utc);
+            result["since6Start"] = since6Start;
+            result["filteredCount"] = _db.UserPoiUnlocks.AsEnumerable()
+                .Count(u => DateTime.SpecifyKind(u.UnlockedAt, DateTimeKind.Utc) >= since6Start);
         } catch (Exception ex) {
             result["columnOk"] = false;
             result["error"]    = ex.Message;
@@ -162,14 +171,21 @@ public class StatsController : ControllerBase
             .Select(d => new { monthKey = $"{d.Year:0000}-{d.Month:00}", label = $"T{d.Month}/{d.Year}" })
             .ToList();
 
-        // 9a. Doanh thu từ khách nghe audio — safe fallback nếu cột AmountPaid chưa tồn tại
+        // 9a. Doanh thu từ khách nghe audio — dùng AsEnumerable trước tránh lỗi timezone
         var unlockRevDict  = new Dictionary<string, decimal>();
         decimal totalUnlockRevenue = 0;
         try
         {
-            _db.UserPoiUnlocks
+            // Lấy toàn bộ về memory, tránh lỗi timezone Kind=Unspecified vs Utc khi WHERE trên DB
+            var allUnlocks = _db.UserPoiUnlocks.AsEnumerable()
+                .Select(u => new {
+                    UnlockedAt = DateTime.SpecifyKind(u.UnlockedAt, DateTimeKind.Utc),
+                    u.AmountPaid
+                })
                 .Where(u => u.UnlockedAt >= since6Start)
-                .AsEnumerable()
+                .ToList();
+
+            allUnlocks
                 .GroupBy(u => new { u.UnlockedAt.AddHours(7).Year, u.UnlockedAt.AddHours(7).Month })
                 .Select(g => new { key = $"{g.Key.Year:0000}-{g.Key.Month:00}", rev = g.Sum(u => u.AmountPaid) })
                 .ToList()
@@ -177,7 +193,7 @@ public class StatsController : ControllerBase
 
             totalUnlockRevenue = _db.UserPoiUnlocks.Sum(u => (decimal?)u.AmountPaid) ?? 0;
         }
-        catch { /* AmountPaid column may not exist yet on production — return 0 */ }
+        catch { /* fallback 0 nếu có lỗi bất kỳ */ }
 
         // 9b. Doanh thu từ Owner mua VIP — safe fallback nếu bảng chưa migrate
         var vipRevDict  = new Dictionary<string, decimal>();
