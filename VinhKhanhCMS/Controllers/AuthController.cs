@@ -82,13 +82,17 @@ public class AuthController : ControllerBase
         user.SubscriptionExpiryDate = baseDate.AddMonths(req.Months);
 
         // ── Ghi lịch sử thanh toán VIP để thống kê doanh thu ──────────────
-        // Đơn giá demo: 200,000 VNĐ / tháng
-        const decimal pricePerMonth = 200_000m;
+        // Bảng giá thực tế: 1 tháng = 50.000đ, 1 năm = 500.000đ
+        decimal amountPaid = 0m;
+        if (req.Months == 1) amountPaid = 50_000m;
+        else if (req.Months == 12) amountPaid = 500_000m;
+        else amountPaid = 50_000m * req.Months; // Fallback an toàn
+
         _context.SubscriptionPayments.Add(new VinhKhanhCMS.Models.SubscriptionPayment
         {
             OwnerId   = id,
             Months    = req.Months,
-            AmountPaid = pricePerMonth * req.Months,
+            AmountPaid = amountPaid,
             PaidAt    = DateTime.UtcNow,
             Note      = $"Gói VIP {req.Months} tháng — Owner: {user.Username}"
         });
