@@ -13,12 +13,12 @@ public class StatsController : ControllerBase
 
     public StatsController(AppDbContext db, SessionTracker tracker)
     {
-        _db     = db;
+        _db      = db;
         _tracker = tracker;
     }
 
     /// <summary>
-    /// GET /api/stats/overview — thống kê hoạt động du khách (không có thông tin cá nhân)
+    /// GET /api/stats/overview — thống kê hoạt động du khách + doanh thu
     /// </summary>
     [HttpGet("overview")]
     public IActionResult Overview()
@@ -30,12 +30,12 @@ public class StatsController : ControllerBase
         var totalUnlocks = _db.UserPoiUnlocks.Count();
 
         // ── 2. Thiết bị đang hoạt động (từ heartbeat, 30 giây) ──
-        var activeDevices = _tracker.GetActiveCount(30);
+        var activeDevices  = _tracker.GetActiveCount(30);
         var activeSessions = _tracker.GetActiveDevices(30)
             .Select(d => new
             {
                 sessionId   = d.DeviceId,
-                unlockCount = 1,          // heartbeat-only: mỗi device là 1 kết nối
+                unlockCount = 1,
                 lastSeen    = d.LastSeen,
                 expiresAt   = d.SecondsAgo + "s trước"
             }).ToList();
@@ -104,8 +104,8 @@ public class StatsController : ControllerBase
             .ToList();
 
         // ── 7. Ngày và giờ cao điểm ──
-        var busiest    = weekdayStats.OrderByDescending(d => d.count).First();
-        var busiestHr  = hourlyStats.OrderByDescending(h => h.count).First();
+        var busiest   = weekdayStats.OrderByDescending(d => d.count).First();
+        var busiestHr = hourlyStats.OrderByDescending(h => h.count).First();
 
         // ── 8. Ma trận 7×24 (dayOfWeek × hour) cho heatmap ──
         var rawMatrix = _db.UserPoiUnlocks
@@ -113,7 +113,7 @@ public class StatsController : ControllerBase
             .AsEnumerable()
             .GroupBy(u => new
             {
-                Day  = (int)u.UnlockedAt.AddHours(7).DayOfWeek,  // 0=CN, 1=T2 ... 6=T7
+                Day  = (int)u.UnlockedAt.AddHours(7).DayOfWeek,
                 Hour = u.UnlockedAt.AddHours(7).Hour
             })
             .Select(g => new { g.Key.Day, g.Key.Hour, Count = g.Count() })
@@ -124,6 +124,59 @@ public class StatsController : ControllerBase
                 .Select(h => rawMatrix.FirstOrDefault(x => x.Day == d && x.Hour == h)?.Count ?? 0)
                 .ToArray())
             .ToArray();
+
+        // ── 9. DOANH THU THEO THÁNG (6 tháng gần nhất, UTC+7) ──────────────
+        var since6Months = now.AddHours(7).AddMonths(-5);
+        var since6Start  = new DateTime(since6Months.Year, since6Months.Month, 1).AddHours(-7); // back to UTC
+
+        // 9a. Doanh thu từ khách nghe audio (UserPoiUnlocks.AmountPaid)
+        var unlockRevRaw = _db.UserPoiUnlocks
+            .Where(u => u.UnlockedAt >= since6Start)
+            .AsEnumerable()
+            .GroupBy(u => new {
+                u.UnlockedAt.AddHours(7).Year,
+                u.UnlockedAt.AddHours(7).Month
+            })
+            .Select(g => new {
+                monthKey = $"{g.Key.Year:0000}-{g.Key.Month:00}",
+                revenue  = g.Sum(u => u.AmountPaid)
+            })
+            .ToList();
+
+        // 9b. Doanh thu từ Owner mua gói VIP (SubscriptionPayments.AmountPaid)
+        var vipRevRaw = _db.SubscriptionPayments
+            .Where(p => p.PaidAt >= since6Start)
+            .AsEnumerable()
+            .GroupBy(p => new {
+                p.PaidAt.AddHours(7).Year,
+                p.PaidAt.AddHours(7).Month
+            })
+            .Select(g => new {
+                monthKey = $"{g.Key.Year:0000}-{g.Key.Month:00}",
+                revenue  = g.Sum(p => p.AmountPaid)
+            })
+            .ToList();
+
+        // 9c. Build 6 tháng liên tục (tháng không có doanh thu = 0, không bỏ trống)
+        var months6 = Enumerable.Range(0, 6)
+            .Select(i => now.AddHours(7).AddMonths(-5 + i))
+            .Select(d => new {
+                monthKey = $"{d.Year:0000}-{d.Month:00}",
+                label    = $"T{d.Month}/{d.Year}"
+            })
+            .ToList();
+
+        var monthlyRevenue = months6.Select(m => new {
+            month         = m.label,
+            unlockRevenue = unlockRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0,
+            vipRevenue    = vipRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0,
+            totalRevenue  = (unlockRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0)
+                          + (vipRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0)
+        }).ToList();
+
+        // 9d. Tổng doanh thu tất cả thời gian
+        var totalUnlockRevenue = _db.UserPoiUnlocks.Sum(u => (decimal?)u.AmountPaid) ?? 0;
+        var totalVipRevenue    = _db.SubscriptionPayments.Sum(p => (decimal?)p.AmountPaid) ?? 0;
 
         return Ok(new
         {
@@ -138,7 +191,12 @@ public class StatsController : ControllerBase
             busiestDay       = busiest.day,
             busiestCount     = busiest.count,
             busiestHour      = busiestHr.hour,
-            busiestHourCount = busiestHr.count
+            busiestHourCount = busiestHr.count,
+            // ── Doanh thu ──
+            monthlyRevenue,
+            totalUnlockRevenue,
+            totalVipRevenue,
+            totalRevenue = totalUnlockRevenue + totalVipRevenue
         });
     }
 }

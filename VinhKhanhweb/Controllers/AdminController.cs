@@ -266,6 +266,21 @@ public class AdminController : Controller
                 .EnumerateArray()
                 .Select(row => row.EnumerateArray().Select(c => c.GetInt32()).ToArray())
                 .ToArray();
+
+            // ── Doanh thu theo tháng ──────────────────────────────────────
+            vm.MonthlyRevenue = json.GetProperty("monthlyRevenue")
+                .EnumerateArray()
+                .Select(e => new MonthlyRevenueStat
+                {
+                    Month         = e.GetProperty("month").GetString() ?? "",
+                    UnlockRevenue = e.GetProperty("unlockRevenue").GetDecimal(),
+                    VipRevenue    = e.GetProperty("vipRevenue").GetDecimal(),
+                    TotalRevenue  = e.GetProperty("totalRevenue").GetDecimal()
+                }).ToList();
+
+            vm.TotalUnlockRevenue = json.GetProperty("totalUnlockRevenue").GetDecimal();
+            vm.TotalVipRevenue    = json.GetProperty("totalVipRevenue").GetDecimal();
+            vm.TotalRevenue       = json.GetProperty("totalRevenue").GetDecimal();
         }
         catch
         {

@@ -27,17 +27,14 @@ builder.Services.AddHttpClient(); // ✅ Cần thiết cho IHttpClientFactory tr
 
 var app = builder.Build();
 
-// ✅ Tự động Migrations khi khởi động (Tùy chọn, nên dùng lành mạnh hơn EnsureCreated)
-// Tuy nhiên để an toàn nhất trong môi trường dev, ta nên chạy lệnh migration thủ công.
-// Ta tạm thời comment code can thiệp DB trực tiếp ở đây để tránh treo app.
-
-/*
+// ✅ Tự động apply migration khi khởi động — an toàn cho Render/production
+// Đảm bảo bảng SubscriptionPayments và các migration mới được tạo tự động
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // db.Database.Migrate(); 
+    db.Database.Migrate();
 }
-*/
+
 
 app.UseStaticFiles();
 app.UseSwagger();

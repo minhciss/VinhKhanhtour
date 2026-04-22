@@ -11,6 +11,8 @@ public class NarrationEngine
     private IAudioPlayer? _player;
     private static readonly HttpClient _http = new HttpClient();
     private CancellationTokenSource? _ttsCts;
+    // ── Fix Race Condition: hủy HTTP download cũ khi có POI mới ──────────
+    private CancellationTokenSource? _downloadCts;
 
     public async Task PlayPoiNarrationAsync(Poi poi, bool isManual = false)
     {
@@ -39,13 +41,23 @@ public class NarrationEngine
 
             if (!string.IsNullOrEmpty(audioUrl))
             {
+                // ── Hủy HTTP download cũ đang chạy ngầm (tránh race condition) ──────
+                // Nếu người dùng di chuyển nhanh qua nhiều POI, download cũ bị hủy
+                // → chỉ audio của POI hiện tại phát, không bị đè bởi audio trễ hơn
+                _downloadCts?.Cancel();
+                _downloadCts = new CancellationTokenSource();
+                var token = _downloadCts.Token;
+
                 _player?.Stop();
 
                 var memoryStream = await Task.Run(async () =>
                 {
-                    var bytes = await _http.GetByteArrayAsync(audioUrl);
+                    var bytes = await _http.GetByteArrayAsync(audioUrl, token);
                     return new MemoryStream(bytes);
-                });
+                }, token);
+
+                // Nếu download bị cancel trong lúc chờ → không phát audio trễ
+                if (token.IsCancellationRequested) return;
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
@@ -77,6 +89,11 @@ public class NarrationEngine
                 }, cancelToken: _ttsCts.Token);
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Download bị hủy bởi request mới hơn — hành vi đúng, không cần log lỗi
+            Debug.WriteLine("[NarrationEngine] Download cancelled — new POI requested.");
+        }
         catch (Exception ex)
         {
             Debug.WriteLine($"[NarrationEngine] Error: {ex.Message}");
@@ -85,7 +102,8 @@ public class NarrationEngine
 
     public void CancelCurrentNarration()
     {
+        _downloadCts?.Cancel(); // ← Hủy cả HTTP download đang chạy ngầm
         _player?.Stop();
-        _ttsCts?.Cancel(); // Hủy cả TTS fallback
+        _ttsCts?.Cancel();      // ← Hủy cả TTS fallback
     }
 }

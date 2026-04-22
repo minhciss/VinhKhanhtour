@@ -165,22 +165,26 @@ public partial class MapPage : ContentPage
         {
             if (_poisFromApi.Count == 0) return;
 
-            Poi? nearest = null;
-            double minDistance = double.MaxValue;
-
-            // Tìm POI gần nhất trong bán kính
-            foreach (var poi in _poisFromApi)
-            {
-                double distance = LocationHelper.CalculateDistanceInMeters(
-                    userLocation.Latitude, userLocation.Longitude,
-                    poi.Latitude, poi.Longitude);
-
-                if (distance <= poi.Radius && distance < minDistance)
+            // ── Ưu tiên POI khi chồng bán kính ──────────────────────────────
+            // Bước 1: Lọc tất cả POI mà người dùng đang trong bán kính
+            // Bước 2: Sắp xếp theo Priority tăng dần (số nhỏ = ưu tiên cao hơn)
+            //         Priority = 0 (chưa đặt) xếp cuối cùng
+            // Bước 3: Tiebreak theo khoảng cách (gần hơn thắng khi cùng Priority)
+            var poisInRange = _poisFromApi
+                .Select(poi => new
                 {
-                    nearest = poi;
-                    minDistance = distance;
-                }
-            }
+                    Poi      = poi,
+                    Distance = LocationHelper.CalculateDistanceInMeters(
+                        userLocation.Latitude, userLocation.Longitude,
+                        poi.Latitude, poi.Longitude)
+                })
+                .Where(x => x.Distance <= x.Poi.Radius)
+                .OrderBy(x => x.Poi.Priority > 0 ? x.Poi.Priority : int.MaxValue)
+                .ThenBy(x => x.Distance)
+                .FirstOrDefault();
+
+            Poi?   nearest     = poisInRange?.Poi;
+            double minDistance = poisInRange?.Distance ?? double.MaxValue;
 
             if (nearest != null)
             {

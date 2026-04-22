@@ -2,6 +2,15 @@
 @using System.Text.Json
 
 @{
+    var revenueJson = JsonSerializer.Serialize(Model.MonthlyRevenue.Select(m => new {
+        month         = m.Month,
+        unlockRevenue = m.UnlockRevenue,
+        vipRevenue    = m.VipRevenue,
+        totalRevenue  = m.TotalRevenue
+    }).ToList());
+}
+
+@{
     // ── Serialize data sang JSON để inject an toàn vào JavaScript (tránh lỗi encoding) ──
     var weekJson  = JsonSerializer.Serialize(Model.WeekdayStats.Select(d => new { label = d.Day,   value = d.Count }).ToList());
     var trendJson = JsonSerializer.Serialize(Model.Last7Days.Select(d => new { label = d.Date,  value = d.Count }).ToList());
@@ -246,6 +255,78 @@
     </div>
 </div>
 
+<!-- ══ KPI DOANH THU (3 cards) ══ -->
+<div class="row g-3 mb-4 mt-2">
+    <div class="col-12">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="kpi-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#d97706);width:40px;height:40px;">
+                <i class="bi bi-currency-dollar text-white fs-5"></i>
+            </div>
+            <h5 class="text-white mb-0 fw-bold">Doanh Thu Hệ Thống</h5>
+            <small class="text-white-50 ms-1">(tất cả thời gian)</small>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="kpi-card text-white h-100" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <p class="kpi-label">Khách Nghe Audio</p>
+                    <h2 class="kpi-value" style="font-size:1.6rem;">@Model.TotalUnlockRevenue.ToString("N0")đ</h2>
+                </div>
+                <div class="kpi-icon-wrap" style="background:rgba(255,255,255,.18);">
+                    <i class="bi bi-headphones fs-3"></i>
+                </div>
+            </div>
+            <p class="kpi-sub"><i class="bi bi-person-fill me-1"></i>Doanh thu từ mở khóa thuyết minh</p>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="kpi-card text-white h-100" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <p class="kpi-label">Owner Mua Gói VIP</p>
+                    <h2 class="kpi-value" style="font-size:1.6rem;">@Model.TotalVipRevenue.ToString("N0")đ</h2>
+                </div>
+                <div class="kpi-icon-wrap" style="background:rgba(255,255,255,.18);">
+                    <i class="bi bi-crown-fill fs-3"></i>
+                </div>
+            </div>
+            <p class="kpi-sub"><i class="bi bi-shop me-1"></i>Doanh thu từ đăng ký gói VIP</p>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="kpi-card text-white h-100" style="background:linear-gradient(135deg,#f59e0b,#b45309);">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <p class="kpi-label">Tổng Doanh Thu</p>
+                    <h2 class="kpi-value" style="font-size:1.6rem;">@Model.TotalRevenue.ToString("N0")đ</h2>
+                </div>
+                <div class="kpi-icon-wrap" style="background:rgba(255,255,255,.18);">
+                    <i class="bi bi-wallet2 fs-3"></i>
+                </div>
+            </div>
+            <p class="kpi-sub"><i class="bi bi-graph-up-arrow me-1"></i>Tổng cộng toàn hệ thống</p>
+        </div>
+    </div>
+</div>
+
+<!-- ══ BIỂU ĐỒ DOANH THU 6 THÁNG ══ -->
+<div class="dark-card mb-4">
+    <div class="dark-card-header">
+        <span class="badge rounded-pill px-3 py-2" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+            <i class="bi bi-bar-chart-fill me-1"></i>Doanh thu theo tháng
+        </span>
+        <small class="text-white-50 ms-2">(6 tháng gần đây · VNĐ)</small>
+        <h6 class="text-white mt-2 mb-0">
+            Phân tích nguồn doanh thu: Khách nghe audio vs Owner đăng ký VIP
+        </h6>
+    </div>
+    <canvas id="revenueChart" height="130"></canvas>
+</div>
+
 <!-- ══ STYLES ══ -->
 <style>
     .kpi-card {
@@ -386,6 +467,8 @@
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+    // ── Dữ liệu doanh thu từ server ──
+    const REVENUE = @Html.Raw(revenueJson);
     // ── Dữ liệu từ server (JSON serialized, an toàn với Unicode) ──
     const WEEK   = @Html.Raw(weekJson);
     const TREND  = @Html.Raw(trendJson);
@@ -467,6 +550,60 @@
         `;
         root.appendChild(legend);
     })();
+
+    // ── 0. Biểu đồ Doanh Thu theo tháng (Stacked Bar) ──
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+            labels: REVENUE.map(d => d.month),
+            datasets: [
+                {
+                    label: 'Khách nghe audio',
+                    data:  REVENUE.map(d => d.unlockRevenue),
+                    backgroundColor: 'rgba(14,165,233,.80)',
+                    borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 },
+                    borderSkipped: false,
+                    borderWidth: 0
+                },
+                {
+                    label: 'Owner mua gói VIP',
+                    data:  REVENUE.map(d => d.vipRevenue),
+                    backgroundColor: 'rgba(139,92,246,.80)',
+                    borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
+                    borderSkipped: false,
+                    borderWidth: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: { color: 'rgba(226,232,240,.8)', usePointStyle: true, padding: 20 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('vi-VN')}đ`,
+                        footer: items => ` Tổng tháng: ${items.reduce((s,i) => s + i.parsed.y, 0).toLocaleString('vi-VN')}đ`
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,.06)' },
+                    ticks: {
+                        precision: 0,
+                        callback: v => v >= 1000 ? (v/1000).toLocaleString('vi-VN') + 'k' : v
+                    }
+                }
+            }
+        }
+    });
 
     // ── Cài đặt Chart.js mặc định ──
     Chart.defaults.color           = 'rgba(226,232,240,.8)';

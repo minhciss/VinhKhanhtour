@@ -15,4 +15,5 @@ public class AppDbContext : DbContext
     public DbSet<AppUser> AppUsers { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<UserPoiUnlock> UserPoiUnlocks { get; set; }
-}
+    public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; } // ✅ Lịch sử mua VIP
+}
