@@ -126,57 +126,57 @@ public class StatsController : ControllerBase
             .ToArray();
 
         // ── 9. DOANH THU THEO THÁNG (6 tháng gần nhất, UTC+7) ──────────────
+        // Mỗi query riêng được bọc try/catch — trả 0 nếu cột/bảng chưa sẵn sàng trên DB
         var since6Months = now.AddHours(7).AddMonths(-5);
-        var since6Start  = new DateTime(since6Months.Year, since6Months.Month, 1).AddHours(-7); // back to UTC
+        var since6Start  = new DateTime(since6Months.Year, since6Months.Month, 1).AddHours(-7);
 
-        // 9a. Doanh thu từ khách nghe audio (UserPoiUnlocks.AmountPaid)
-        var unlockRevRaw = _db.UserPoiUnlocks
-            .Where(u => u.UnlockedAt >= since6Start)
-            .AsEnumerable()
-            .GroupBy(u => new {
-                u.UnlockedAt.AddHours(7).Year,
-                u.UnlockedAt.AddHours(7).Month
-            })
-            .Select(g => new {
-                monthKey = $"{g.Key.Year:0000}-{g.Key.Month:00}",
-                revenue  = g.Sum(u => u.AmountPaid)
-            })
-            .ToList();
-
-        // 9b. Doanh thu từ Owner mua gói VIP (SubscriptionPayments.AmountPaid)
-        var vipRevRaw = _db.SubscriptionPayments
-            .Where(p => p.PaidAt >= since6Start)
-            .AsEnumerable()
-            .GroupBy(p => new {
-                p.PaidAt.AddHours(7).Year,
-                p.PaidAt.AddHours(7).Month
-            })
-            .Select(g => new {
-                monthKey = $"{g.Key.Year:0000}-{g.Key.Month:00}",
-                revenue  = g.Sum(p => p.AmountPaid)
-            })
-            .ToList();
-
-        // 9c. Build 6 tháng liên tục (tháng không có doanh thu = 0, không bỏ trống)
+        // Build nhãn 6 tháng liên tục (không phụ thuộc DB)
         var months6 = Enumerable.Range(0, 6)
             .Select(i => now.AddHours(7).AddMonths(-5 + i))
-            .Select(d => new {
-                monthKey = $"{d.Year:0000}-{d.Month:00}",
-                label    = $"T{d.Month}/{d.Year}"
-            })
+            .Select(d => new { monthKey = $"{d.Year:0000}-{d.Month:00}", label = $"T{d.Month}/{d.Year}" })
             .ToList();
 
-        var monthlyRevenue = months6.Select(m => new {
-            month         = m.label,
-            unlockRevenue = unlockRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0,
-            vipRevenue    = vipRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0,
-            totalRevenue  = (unlockRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0)
-                          + (vipRevRaw.FirstOrDefault(r => r.monthKey == m.monthKey)?.revenue ?? 0)
-        }).ToList();
+        // 9a. Doanh thu từ khách nghe audio — safe fallback nếu cột AmountPaid chưa tồn tại
+        var unlockRevDict  = new Dictionary<string, decimal>();
+        decimal totalUnlockRevenue = 0;
+        try
+        {
+            _db.UserPoiUnlocks
+                .Where(u => u.UnlockedAt >= since6Start)
+                .AsEnumerable()
+                .GroupBy(u => new { u.UnlockedAt.AddHours(7).Year, u.UnlockedAt.AddHours(7).Month })
+                .Select(g => new { key = $"{g.Key.Year:0000}-{g.Key.Month:00}", rev = g.Sum(u => u.AmountPaid) })
+                .ToList()
+                .ForEach(x => unlockRevDict[x.key] = x.rev);
 
-        // 9d. Tổng doanh thu tất cả thời gian
-        var totalUnlockRevenue = _db.UserPoiUnlocks.Sum(u => (decimal?)u.AmountPaid) ?? 0;
-        var totalVipRevenue    = _db.SubscriptionPayments.Sum(p => (decimal?)p.AmountPaid) ?? 0;
+            totalUnlockRevenue = _db.UserPoiUnlocks.Sum(u => (decimal?)u.AmountPaid) ?? 0;
+        }
+        catch { /* AmountPaid column may not exist yet on production — return 0 */ }
+
+        // 9b. Doanh thu từ Owner mua VIP — safe fallback nếu bảng chưa migrate
+        var vipRevDict  = new Dictionary<string, decimal>();
+        decimal totalVipRevenue = 0;
+        try
+        {
+            _db.SubscriptionPayments
+                .Where(p => p.PaidAt >= since6Start)
+                .AsEnumerable()
+                .GroupBy(p => new { p.PaidAt.AddHours(7).Year, p.PaidAt.AddHours(7).Month })
+                .Select(g => new { key = $"{g.Key.Year:0000}-{g.Key.Month:00}", rev = g.Sum(p => p.AmountPaid) })
+                .ToList()
+                .ForEach(x => vipRevDict[x.key] = x.rev);
+
+            totalVipRevenue = _db.SubscriptionPayments.Sum(p => (decimal?)p.AmountPaid) ?? 0;
+        }
+        catch { /* SubscriptionPayments table may not exist yet — return 0 */ }
+
+        // 9c. Build 6 tháng liên tục, tháng không có doanh thu = 0
+        var monthlyRevenue = months6.Select(m =>
+        {
+            var ur = unlockRevDict.TryGetValue(m.monthKey, out var u) ? u : 0m;
+            var vr = vipRevDict.TryGetValue(m.monthKey, out var v) ? v : 0m;
+            return new { month = m.label, unlockRevenue = ur, vipRevenue = vr, totalRevenue = ur + vr };
+        }).ToList();
 
         return Ok(new
         {
