@@ -17,6 +17,32 @@ public class StatsController : ControllerBase
         _tracker = tracker;
     }
 
+    // DEBUG — xoá sau khi debug xong
+    [HttpGet("debug-revenue")]
+    public IActionResult DebugRevenue()
+    {
+        var result = new System.Collections.Generic.Dictionary<string, object>();
+        try {
+            result["unlockCount"]  = _db.UserPoiUnlocks.Count();
+            result["amountPaidSum"] = _db.UserPoiUnlocks.Sum(u => (decimal?)u.AmountPaid) ?? -1;
+            var rows = _db.UserPoiUnlocks.AsEnumerable()
+                .Select(u => new { u.Id, u.AmountPaid, u.UnlockedAt })
+                .Take(5).ToList();
+            result["sample5"]  = rows;
+            result["columnOk"] = true;
+        } catch (Exception ex) {
+            result["columnOk"] = false;
+            result["error"]    = ex.Message;
+            result["inner"]    = ex.InnerException?.Message ?? "";
+        }
+        try {
+            result["subPayCount"] = _db.SubscriptionPayments.Count();
+        } catch (Exception ex2) {
+            result["subPayError"] = ex2.Message;
+        }
+        return Ok(result);
+    }
+
     /// <summary>
     /// GET /api/stats/overview — thống kê hoạt động du khách + doanh thu
     /// </summary>
