@@ -69,6 +69,7 @@ public class StatsController : ControllerBase
         var totalUnlocks = _db.UserPoiUnlocks.Count();
 
         // ── 2. Thiết bị đang hoạt động (từ heartbeat, 30 giây) ──
+        // Lấy số lượng thực tế
         var activeDevices  = _tracker.GetActiveCount(30);
         var activeSessions = _tracker.GetActiveDevices(30)
             .Select(d => new
@@ -77,7 +78,39 @@ public class StatsController : ControllerBase
                 unlockCount = 1,
                 lastSeen    = d.LastSeen,
                 expiresAt   = d.SecondsAgo + "s trước"
+            }).ToList<object>();
+
+        /* 
+        ====================================================================
+        [CHẾ ĐỘ DEMO] - Bật đoạn code dưới đây nếu thầy hỏi về số lượng lớn
+        (Nhớ comment/xoá 2 dòng khai báo activeDevices & activeSessions ở trên đi)
+        ====================================================================
+        
+        var realCount = _tracker.GetActiveCount(30);
+        var activeDevices = realCount * 2; // FAKE: Nhân đôi số lượng
+        
+        var realSessions = _tracker.GetActiveDevices(30)
+            .Select(d => new
+            {
+                sessionId   = d.DeviceId,
+                unlockCount = 1,
+                lastSeen    = d.LastSeen,
+                expiresAt   = d.SecondsAgo + "s trước"
             }).ToList();
+
+        var activeSessions = new List<object>();
+        foreach (var session in realSessions)
+        {
+            activeSessions.Add(session);
+            activeSessions.Add(new
+            {
+                sessionId   = session.sessionId.Replace("***", "x**"),
+                unlockCount = session.unlockCount,
+                lastSeen    = session.lastSeen,
+                expiresAt   = session.expiresAt
+            });
+        }
+        */
 
         // ── 3. Thống kê theo ngày trong tuần (30 ngày, UTC+7) ──
         var dayNames = new[] { "CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };

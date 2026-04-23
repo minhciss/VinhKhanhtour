@@ -5,7 +5,12 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-0 text-dark fw-bold">Danh sách Điểm Đến Của Bạn</h3>
-    <a href="/Owner/Create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i>Đăng ký điểm mới</a>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#appQrModal">
+            <i class="bi bi-qr-code-scan me-1"></i>Mã QR Ứng dụng
+        </button>
+        <a href="/Owner/Create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg me-1"></i>Đăng ký điểm mới</a>
+    </div>
 </div>
 
 <div class="row g-4">
@@ -89,12 +94,12 @@
     }
 </div>
 
-<!-- QR Code Modal -->
+<!-- QR Code Modal cho POI -->
 <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content rounded-4 border-0 shadow">
       <div class="modal-header border-bottom-0 pb-0">
-        <h5 class="modal-title fw-bold" id="qrModalLabel">Mã QR</h5>
+        <h5 class="modal-title fw-bold" id="qrModalLabel">Mã QR Điểm Đến</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-center pt-2">
@@ -104,6 +109,29 @@
         </div>
         <div>
             <a id="qrDownloadBtn" href="#" download="qrcode.png" class="btn btn-primary w-100 fw-bold">
+                <i class="bi bi-download me-1"></i> Tải ảnh xuống
+            </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR Code Modal cho App Chung -->
+<div class="modal fade" id="appQrModal" tabindex="-1" aria-labelledby="appQrModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold text-success" id="appQrModalLabel">Mã QR Ứng dụng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center pt-2">
+        <p class="text-muted small mb-3">Quét mã này để mở ứng dụng VinhKhanhTour</p>
+        <div class="bg-light p-3 rounded-3 d-inline-block border mb-3 border-success">
+            <img src="/QRCode/AppImage" alt="App QR Code" class="img-fluid" style="width: 200px; height: 200px; object-fit: contain;" />
+        </div>
+        <div>
+            <a href="/QRCode/AppImage" download="vinhkhanhtour_app.png" class="btn btn-success w-100 fw-bold">
                 <i class="bi bi-download me-1"></i> Tải ảnh xuống
             </a>
         </div>
