@@ -25,6 +25,20 @@ builder.Services.AddSingleton<TtsService>();
 builder.Services.AddSingleton<VinhKhanhCMS.Services.SessionTracker>(); // ✅ Heartbeat tracker
 builder.Services.AddHttpClient(); // ✅ Cần thiết cho IHttpClientFactory trong TranslationController
 
+// ✅ CORS: cho phép Admin web và iPhone gọi API unlock từ trình duyệt
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAdminWeb", policy =>
+        policy
+            .WithOrigins(
+                "https://vinhkhanh-admin.onrender.com",  // Production Render
+                "http://localhost:7170",                  // Local Admin dev
+                "https://localhost:7170"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
 var app = builder.Build();
 
 // ✅ Tự động apply migration khi khởi động — an toàn cho Render/production
@@ -42,6 +56,7 @@ using (var scope = app.Services.CreateScope())
 app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseCors("AllowAdminWeb"); // ✅ Đặt trước MapControllers
 app.MapControllers();
 
 // ✅ Render inject PORT env var — phải listen đúng port đó (nếu có)
