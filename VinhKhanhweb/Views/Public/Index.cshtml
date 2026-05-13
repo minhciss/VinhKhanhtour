@@ -299,6 +299,35 @@
                 card.style.display = name.includes(query) ? 'flex' : 'none';
             });
         }
+
+        // ── HEARTBEAT: báo cáo thiết bị đang trực tuyến cho Admin dashboard ──
+        (function startHeartbeat() {
+            // Dùng sessionKey đã tạo lúc thanh toán (hoặc tạo mới nếu chưa có)
+            var deviceId = localStorage.getItem('vkt_session_key');
+            if (!deviceId) {
+                deviceId = 'web-' + Math.random().toString(36).slice(2, 10);
+                localStorage.setItem('vkt_session_key', deviceId);
+            }
+            // Thêm tiền tố "web-" để phân biệt với MAUI app trên dashboard
+            var pingId = deviceId.startsWith('web-') ? deviceId : 'web-' + deviceId;
+            var cmsUrl = '@(ViewBag.CmsBaseUrl as string ?? "https://vinhkhanh-cms.onrender.com")';
+
+            function ping() {
+                fetch(cmsUrl + '/api/sessions/ping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceId: pingId })
+                }).catch(() => {}); // Im lặng nếu mạng mất kết nối
+            }
+
+            ping(); // Ping ngay lập tức khi tải trang
+            setInterval(ping, 15000); // Ping mỗi 15 giây
+
+            // Ping thêm khi người dùng quay lại tab (từ background)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) ping();
+            });
+        })();
     </script>
 </body>
 </html>

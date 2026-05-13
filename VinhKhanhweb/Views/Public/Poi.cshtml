@@ -278,5 +278,31 @@
             }
         </script>
     }
+
+    <script>
+        // ── HEARTBEAT: báo cáo đang xem POI trên web ──
+        (function() {
+            var deviceId = localStorage.getItem('vkt_session_key');
+            if (!deviceId) {
+                deviceId = 'web-' + Math.random().toString(36).slice(2, 10);
+                localStorage.setItem('vkt_session_key', deviceId);
+            }
+            var pingId = deviceId.startsWith('web-') ? deviceId : 'web-' + deviceId;
+            var cmsUrl = '@(ViewBag.CmsBaseUrl as string ?? "https://vinhkhanh-cms.onrender.com")';
+
+            function ping() {
+                fetch(cmsUrl + '/api/sessions/ping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceId: pingId })
+                }).catch(() => {});
+            }
+            ping();
+            setInterval(ping, 15000);
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) ping();
+            });
+        })();
+    </script>
 </body>
 </html>
