@@ -19,6 +19,8 @@ public class Poi
     public string ImageUrl { get; set; } = "";
 
     // ✅ Lưu ảnh trực tiếp vào PostgreSQL (tránh mất file khi Render redeploy)
+    // [JsonIgnore] — không serialize ImageData vào JSON (có thể rất lớn, gây crash)
+    [JsonIgnore]
     public byte[]? ImageData { get; set; }
 
     public bool IsActive { get; set; } = true;
