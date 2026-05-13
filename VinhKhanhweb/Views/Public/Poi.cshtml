@@ -263,19 +263,34 @@
         );
         <script>
             var translations = @Html.Raw(translationsJson);
+            var listenLogged = false; // Chỉ log 1 lần mỗi lần vào trang
 
             function selectLang(index) {
-                // Update tabs
                 document.querySelectorAll('.lang-tab').forEach((tab, i) => {
                     tab.classList.toggle('active', i === index);
                 });
-                // Update player
                 var t = translations[index];
                 document.getElementById('audioTitle').textContent = t.title || '';
                 var player = document.getElementById('audioPlayer');
                 player.src = t.audioUrl;
                 player.play().catch(() => {});
             }
+
+            // Ghi nhận lượt nghe khi audio bắt đầu phát (lần đầu)
+            document.getElementById('audioPlayer').addEventListener('play', function logListen() {
+                if (listenLogged) return;
+                listenLogged = true;
+
+                var sessionKey = localStorage.getItem('vkt_session_key') || '';
+                var cmsUrl = '@(ViewBag.CmsBaseUrl as string ?? "https://vinhkhanh-cms.onrender.com")';
+                var poiId = @Model.Id;
+
+                fetch(cmsUrl + '/api/unlock/mock-pay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionKey: sessionKey, poiId: poiId, unlockType: 'auto' })
+                }).catch(() => {}); // Im lặng — không ảnh hưởng UX
+            });
         </script>
     }
 
