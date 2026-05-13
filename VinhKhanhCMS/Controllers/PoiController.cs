@@ -78,7 +78,11 @@ public class PoiController : ControllerBase
 
         foreach (var poi in data)
         {
-            poi.ImageUrl = FixUrl(poi.ImageUrl, baseUrl);
+            // ✅ Ưu tiên: nếu đã có dữ liệu ảnh trong DB → dùng endpoint /image (bền vững)
+            if (poi.ImageData != null && poi.ImageData.Length > 0)
+                poi.ImageUrl = $"{baseUrl}/api/pois/{poi.Id}/image";
+            else
+                poi.ImageUrl = FixUrl(poi.ImageUrl, baseUrl);
 
             if (poi.Translations != null)
                 foreach (var t in poi.Translations)
@@ -125,7 +129,11 @@ public class PoiController : ControllerBase
 
         var baseUrl = GetBaseUrl();
 
-        poi.ImageUrl = FixUrl(poi.ImageUrl, baseUrl);
+        // ✅ Ưu tiên: nếu đã có dữ liệu ảnh trong DB → dùng endpoint /image (bền vững)
+        if (poi.ImageData != null && poi.ImageData.Length > 0)
+            poi.ImageUrl = $"{baseUrl}/api/pois/{poi.Id}/image";
+        else
+            poi.ImageUrl = FixUrl(poi.ImageUrl, baseUrl);
 
         if (poi.Translations != null)
             foreach (var t in poi.Translations)
