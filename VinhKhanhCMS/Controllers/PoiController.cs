@@ -179,7 +179,7 @@ public class PoiController : ControllerBase
         return Ok(poi);
     }
     
-    // 📸 Upload Image for POI
+    // 📸 Upload Image for POI — lưu vào PostgreSQL (ImageData) thay vì file system
     [HttpPost("{id}/upload-image")]
     public async Task<IActionResult> UploadImage(int id, IFormFile imageFile)
     {
@@ -189,23 +189,32 @@ public class PoiController : ControllerBase
         if (imageFile == null || imageFile.Length == 0)
             return BadRequest("No file provided");
 
-        var extension = Path.GetExtension(imageFile.FileName);
-        var filename = $"poi_{id}_{DateTime.UtcNow.Ticks}{extension}";
-        var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "pois");
+        // ✅ Đọc thẳng vào bộ nhớ, lưu vào DB — không cần filesystem
+        using var ms = new MemoryStream();
+        await imageFile.CopyToAsync(ms);
+        poi.ImageData = ms.ToArray();
 
-        if (!Directory.Exists(folder))
-            Directory.CreateDirectory(folder);
-
-        var filepath = Path.Combine(folder, filename);
-        using (var stream = new FileStream(filepath, FileMode.Create))
-        {
-            await imageFile.CopyToAsync(stream);
-        }
-
-        poi.ImageUrl = "/images/pois/" + filename;
+        // Lưu URL trỏ về endpoint serve ảnh từ DB
+        var baseUrl = GetBaseUrl();
+        poi.ImageUrl = $"{baseUrl}/api/pois/{id}/image";
         await _context.SaveChangesAsync();
 
         return Ok(new { ImageUrl = poi.ImageUrl });
+    }
+
+    // 🖼️ Serve ảnh từ PostgreSQL
+    [HttpGet("{id}/image")]
+    public IActionResult GetImage(int id)
+    {
+        var poi = _context.Pois.Find(id);
+        if (poi == null || poi.ImageData == null || poi.ImageData.Length == 0)
+            return NotFound();
+
+        // Phát hiện MIME type từ byte header (PNG / JPEG)
+        var mime = poi.ImageData.Length > 1 && poi.ImageData[0] == 0x89
+            ? "image/png" : "image/jpeg";
+
+        return File(poi.ImageData, mime);
     }
 
     // ❌ Xóa POI

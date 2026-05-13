@@ -205,13 +205,15 @@ public class StatsController : ControllerBase
             .Select(d => new { monthKey = $"{d.Year:0000}-{d.Month:00}", label = $"T{d.Month}/{d.Year}" })
             .ToList();
 
-        // 9a. Doanh thu từ khách nghe audio — dùng AsEnumerable trước tránh lỗi timezone
+        // 9a. Doanh thu từ khách mở ứng dụng ("day"/"single") — KHÔNG tính auto-listen
         var unlockRevDict  = new Dictionary<string, decimal>();
         decimal totalUnlockRevenue = 0;
         try
         {
-            // Lấy toàn bộ về memory, tránh lỗi timezone Kind=Unspecified vs Utc khi WHERE trên DB
+            // Chỉ tính các giao dịch khách thực sự trả tiền (day = mở app, single = POI lẻ)
+            // Loại bỏ unlockType="auto" (log từ MAUI khi nghe POI tự động — không phải doanh thu thật)
             var allUnlocks = _db.UserPoiUnlocks.AsEnumerable()
+                .Where(u => u.UnlockType != "auto")
                 .Select(u => new {
                     UnlockedAt = DateTime.SpecifyKind(u.UnlockedAt, DateTimeKind.Utc),
                     u.AmountPaid
@@ -225,7 +227,10 @@ public class StatsController : ControllerBase
                 .ToList()
                 .ForEach(x => unlockRevDict[x.key] = x.rev);
 
-            totalUnlockRevenue = _db.UserPoiUnlocks.Sum(u => (decimal?)u.AmountPaid) ?? 0;
+            totalUnlockRevenue = _db.UserPoiUnlocks
+                .AsEnumerable()
+                .Where(u => u.UnlockType != "auto")
+                .Sum(u => u.AmountPaid);
         }
         catch { /* fallback 0 nếu có lỗi bất kỳ */ }
 

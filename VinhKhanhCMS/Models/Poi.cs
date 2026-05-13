@@ -18,6 +18,9 @@ public class Poi
 
     public string ImageUrl { get; set; } = "";
 
+    // ✅ Lưu ảnh trực tiếp vào PostgreSQL (tránh mất file khi Render redeploy)
+    public byte[]? ImageData { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     // "Pending" = Owner đã đăng ký, chờ Admin duyệt
