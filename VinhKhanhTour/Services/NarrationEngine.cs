@@ -64,6 +64,10 @@ public class NarrationEngine
                     _player = AudioManager.Current.CreatePlayer(memoryStream);
                     _player.Play();
                 });
+                
+                // [NEW] Ghi nhận lượt nghe vào CMS
+                _ = new ApiService().LogAutoListenAsync(poi.Id);
+                
                 return;
             }
 
@@ -81,6 +85,9 @@ public class NarrationEngine
                 // Hủy TTS đang chạy trước
                 _ttsCts?.Cancel();
                 _ttsCts = new CancellationTokenSource();
+
+                // [NEW] Ghi nhận lượt nghe vào CMS
+                _ = new ApiService().LogAutoListenAsync(poi.Id);
 
                 await TextToSpeech.Default.SpeakAsync(script, new SpeechOptions
                 {

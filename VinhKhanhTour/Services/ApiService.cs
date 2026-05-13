@@ -140,4 +140,37 @@ public class ApiService
             System.Diagnostics.Debug.WriteLine($"[Heartbeat] Ping failed (silent): {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Gửi tín hiệu báo server CMS rằng đã phát auto-narration để tăng số "lượt nghe" trong thống kê Admin.
+    /// Tạo SessionKey giả ngẫu nhiên để server luôn tính đây là một lượt nghe mới (phục vụ Demo).
+    /// </summary>
+    public async Task LogAutoListenAsync(int poiId)
+    {
+        try
+        {
+            var fakeSessionKey = Guid.NewGuid().ToString(); // Đảm bảo luôn được tính là lượt nghe mới
+            var payload = new StringContent(
+                System.Text.Json.JsonSerializer.Serialize(new 
+                { 
+                    sessionKey = fakeSessionKey,
+                    poiId = poiId,
+                    unlockType = "auto"
+                }),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var response = await _httpClient.PostAsync("/api/unlock/mock-pay", payload, cts.Token);
+
+            if (response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiService] Logged auto-listen for POI {poiId} successfully.");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiService] Log auto-listen failed (silent): {ex.Message}");
+        }
+    }
 }

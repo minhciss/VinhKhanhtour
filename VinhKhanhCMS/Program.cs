@@ -33,29 +33,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     
-    // ✅ Fix: Seed existing migrations into history to prevent "relation already exists" error
-    try 
-    {
-        db.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
-                ""MigrationId"" character varying(150) NOT NULL,
-                ""ProductVersion"" character varying(32) NOT NULL,
-                CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
-            );
-
-            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
-            VALUES 
-            ('20260410073946_InitDb', '8.0.5'),
-            ('20260414151401_AddOwnerSubscription', '8.0.5'),
-            ('20260422093741_AddSubscriptionPayments', '8.0.5')
-            ON CONFLICT (""MigrationId"") DO NOTHING;
-        ");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("" + ex.Message);
-    }
-
+    // Removed forced migration history seeding for fresh database.
     db.Database.Migrate();
 }
 

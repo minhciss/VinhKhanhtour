@@ -74,6 +74,9 @@ public partial class SettingsPage : ContentPage
         
         // Đổi ngôn ngữ runtime — {local:Translate} bindings và POI sẽ cập nhật ngay
         Services.LocalizationResourceManager.Instance.SetCulture(new System.Globalization.CultureInfo(cultureString));
+
+        // Update nhãn tốc độ đọc (vì nó không dùng binding)
+        UpdateSpeechRateLabel(SpeechRateSlider.Value);
     }
 
     private void OnThemeSwitchToggled(object sender, ToggledEventArgs e)

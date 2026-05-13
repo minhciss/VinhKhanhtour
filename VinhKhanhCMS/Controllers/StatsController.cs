@@ -67,10 +67,13 @@ public class StatsController : ControllerBase
 
         // ── 1. Tổng lượt mở khóa ──
         var totalUnlocks = _db.UserPoiUnlocks.Count();
+       
+        //var totalUnlocks = _db.UserPoiUnlocks.Count() * 2;
+
 
         // ── 2. Thiết bị đang hoạt động (từ heartbeat, 30 giây) ──
         // Lấy số lượng thực tế
-         var activeDevices  = _tracker.GetActiveCount(30);
+        var activeDevices  = _tracker.GetActiveCount(30);
         var activeSessions = _tracker.GetActiveDevices(30)
            .Select(d => new
            {

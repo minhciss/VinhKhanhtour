@@ -10,11 +10,9 @@ services:
     dockerContext: ./VinhKhanhCMS
     plan: free
     envVars:
-      # ✅ Render tự inject DATABASE_URL từ PostgreSQL service bên dưới
+      # ✅ Nhập thủ công từ Render Dashboard (vì database miễn phí bị giới hạn 90 ngày)
       - key: DATABASE_URL
-        fromDatabase:
-          name: vinhkhanh-db
-          property: connectionString
+        sync: false
       # ✅ Sau khi deploy xong, điền URL thật của service này vào đây
       # Ví dụ: https://vinhkhanh-cms.onrender.com
       - key: API_BASE_URL
@@ -40,9 +38,3 @@ services:
       - key: ADMIN_BASE_URL
         sync: false   # ← user tự điền sau khi có URL
 
-# ─── PostgreSQL Database (Free 90 ngày) ───────────────────────
-databases:
-  - name: vinhkhanh-db
-    databaseName: vinhkhanh
-    user: vinhkhanh
-    plan: free
