@@ -5,11 +5,29 @@ using VinhKhanhadmin.Models;
 public class PublicController : Controller
 {
     private readonly HttpClient _http;
+    private readonly string _cmsBaseUrl;
 
     public PublicController(IHttpClientFactory factory)
     {
         // ✅ Dùng named HttpClient "CmsApi" — URL được config từ env var CMS_API_URL
         _http = factory.CreateClient("CmsApi");
+        _cmsBaseUrl = Environment.GetEnvironmentVariable("CMS_API_URL") ?? "http://localhost:5137";
+    }
+
+    // Trang chủ web app — danh sách các điểm tham quan
+    [HttpGet("/tour")]
+    public async Task<IActionResult> Index()
+    {
+        try
+        {
+            var pois = await _http.GetFromJsonAsync<List<Poi>>("api/pois?status=Approved") ?? new();
+            ViewBag.CmsBaseUrl = _cmsBaseUrl;
+            return View(pois);
+        }
+        catch
+        {
+            return View(new List<Poi>());
+        }
     }
 
     public async Task<IActionResult> Poi(int id)
@@ -21,17 +39,13 @@ public class PublicController : Controller
                 $"api/pois/{id}/translations");
 
             ViewBag.Translations = translations ?? new List<PoiTranslation>();
-            
-            // Pass CmsBaseUrl to view for correct image mapping
-            ViewBag.CmsBaseUrl = Environment.GetEnvironmentVariable("CMS_API_URL") 
-                ?? "http://localhost:5137";
+            ViewBag.CmsBaseUrl = _cmsBaseUrl;
                 
             return View(poi);
         }
         catch (HttpRequestException ex)
         {
-            // Tránh lỗi 500 ném thẳng stack trace vào mặt người dùng
-            return Content($"Hệ thống đang quá tải hoặc máy chủ API chưa sẵn sàng. Xin vui lòng thử lại sau ít phút.\\nChi tiết lỗi kỹ thuật: {ex.StatusCode} - {ex.Message}");
+            return Content($"Hệ thống đang quá tải hoặc máy chủ API chưa sẵn sàng. Xin vui lòng thử lại sau ít phút.\nChi tiết lỗi kỹ thuật: {ex.StatusCode} - {ex.Message}");
         }
         catch (Exception ex)
         {

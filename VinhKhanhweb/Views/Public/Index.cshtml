@@ -1,0 +1,304 @@
+@model List<Poi>
+@{
+    Layout = null;
+    var cmsBase = ViewBag.CmsBaseUrl as string ?? "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <title>VinhKhanhTour – Khám Phá Vĩnh Khánh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+
+        /* ── HERO HEADER ── */
+        .hero-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            padding: 40px 20px 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-header::before {
+            content: '';
+            position: absolute;
+            top: -60px; left: 50%;
+            transform: translateX(-50%);
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(56,189,248,0.12), transparent 70%);
+            pointer-events: none;
+        }
+        .hero-logo {
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+        }
+        .hero-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+        }
+        .hero-header p {
+            color: rgba(226,232,240,0.5);
+            font-size: 0.88rem;
+        }
+        .badge-paid {
+            display: inline-block;
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 999px;
+            margin-top: 12px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── SEARCH BAR ── */
+        .search-wrap {
+            padding: 16px 16px 0;
+        }
+        .search-input {
+            width: 100%;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px 12px 42px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .search-input:focus { border-color: #38bdf8; }
+        .search-wrap { position: relative; }
+        .search-icon {
+            position: absolute;
+            left: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(226,232,240,0.4);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        /* ── POI CARDS ── */
+        .section-title {
+            padding: 20px 16px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(226,232,240,0.4);
+        }
+
+        .poi-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 0 16px;
+        }
+
+        .poi-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+            text-decoration: none;
+            color: inherit;
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .poi-card:active {
+            transform: scale(0.98);
+        }
+        .poi-card:hover {
+            border-color: rgba(56,189,248,0.4);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+        }
+
+        .poi-img {
+            width: 110px;
+            min-width: 110px;
+            background: #1e293b;
+            overflow: hidden;
+            position: relative;
+        }
+        .poi-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .poi-img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: rgba(255,255,255,0.15);
+        }
+
+        .poi-body {
+            padding: 14px 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+        }
+        .poi-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .poi-address {
+            font-size: 0.78rem;
+            color: rgba(226,232,240,0.45);
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .poi-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .poi-audio-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+        .poi-audio-badge.has { background: rgba(16,185,129,0.18); color: #34d399; }
+        .poi-audio-badge.none { background: rgba(239,68,68,0.15); color: #f87171; }
+        .poi-arrow {
+            color: rgba(226,232,240,0.3);
+            font-size: 1.1rem;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(226,232,240,0.35);
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            padding: 30px 20px 0;
+            font-size: 0.75rem;
+            color: rgba(226,232,240,0.25);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO HEADER -->
+    <div class="hero-header">
+        <div class="hero-logo">🗺️</div>
+        <h1>VinhKhanhTour</h1>
+        <p>Khám phá các điểm tham quan tại Vĩnh Khánh</p>
+        <span class="badge-paid">✓ Đã thanh toán • Truy cập 1 ngày</span>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-wrap" style="padding: 16px 16px 0; position: relative;">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="searchInput" placeholder="Tìm kiếm địa điểm..." oninput="filterPois(this.value)" />
+    </div>
+
+    <!-- POI LIST -->
+    <p class="section-title">Điểm tham quan (@Model.Count)</p>
+
+    @if (Model.Any())
+    {
+        <div class="poi-list" id="poiList">
+            @foreach (var poi in Model)
+            {
+                var imgUrl = !string.IsNullOrEmpty(poi.ImageUrl)
+                    ? (poi.ImageUrl.StartsWith("http") ? poi.ImageUrl : $"{cmsBase}/images/{poi.ImageUrl}")
+                    : "";
+                var hasAudio = poi.Translations?.Any() == true;
+
+                <a class="poi-card" href="/Public/Poi/@poi.Id" data-name="@poi.Name.ToLower()">
+                    <div class="poi-img">
+                        @if (!string.IsNullOrEmpty(imgUrl))
+                        {
+                            <img src="@imgUrl" alt="@poi.Name" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="poi-img-placeholder">📍</div>
+                        }
+                    </div>
+                    <div class="poi-body">
+                        <div>
+                            <p class="poi-name">@poi.Name</p>
+                            @if (!string.IsNullOrEmpty(poi.Address))
+                            {
+                                <p class="poi-address">📍 @poi.Address</p>
+                            }
+                        </div>
+                        <div class="poi-footer">
+                            @if (hasAudio)
+                            {
+                                <span class="poi-audio-badge has">🎧 Có thuyết minh</span>
+                            }
+                            else
+                            {
+                                <span class="poi-audio-badge none">Chưa có audio</span>
+                            }
+                            <span class="poi-arrow">›</span>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="icon">🏝️</div>
+            <p>Chưa có điểm tham quan nào.<br>Vui lòng thử lại sau.</p>
+        </div>
+    }
+
+    <div class="footer">VinhKhanhTour © @DateTime.Now.Year</div>
+
+    <script>
+        function filterPois(query) {
+            query = query.toLowerCase().trim();
+            document.querySelectorAll('#poiList .poi-card').forEach(card => {
+                const name = card.getAttribute('data-name') ?? '';
+                card.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

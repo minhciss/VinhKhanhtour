@@ -271,14 +271,14 @@
         <div class="kpi-card text-white h-100" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
-                    <p class="kpi-label">Khách Nghe Audio</p>
+                    <p class="kpi-label">Khách Mở Ứng Dụng</p>
                     <h2 class="kpi-value" style="font-size:1.6rem;">@Model.TotalUnlockRevenue.ToString("N0")đ</h2>
                 </div>
                 <div class="kpi-icon-wrap" style="background:rgba(255,255,255,.18);">
-                    <i class="bi bi-headphones fs-3"></i>
+                    <i class="bi bi-phone-fill fs-3"></i>
                 </div>
             </div>
-            <p class="kpi-sub"><i class="bi bi-person-fill me-1"></i>Doanh thu từ mở khóa thuyết minh</p>
+            <p class="kpi-sub"><i class="bi bi-person-fill me-1"></i>Doanh thu bán vé truy cập ứng dụng</p>
         </div>
     </div>
 
@@ -558,7 +558,7 @@
             labels: REVENUE.map(d => d.month),
             datasets: [
                 {
-                    label: 'Khách nghe audio',
+                    label: 'Khách mở ứng dụng',
                     data:  REVENUE.map(d => d.unlockRevenue),
                     backgroundColor: 'rgba(14,165,233,.80)',
                     borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 },

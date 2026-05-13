@@ -1,95 +1,282 @@
 @model Poi
 @{
-    Layout = "~/Views/Shared/_PublicLayout.cshtml";
-    var list = ViewBag.Translations as List<PoiTranslation>;
+    Layout = null;
+    var list = ViewBag.Translations as List<PoiTranslation> ?? new();
+    var cmsBase = ViewBag.CmsBaseUrl as string ?? "";
+    var imgUrl = !string.IsNullOrEmpty(Model.ImageUrl)
+        ? (Model.ImageUrl.StartsWith("http") ? Model.ImageUrl : $"{cmsBase}/images/{Model.ImageUrl}")
+        : "";
 }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <title>@Model.Name – VinhKhanhTour</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-    .hero {
-        width: 100%;
-        height: 300px;
-        background-size: cover;
-        background-position: center;
-        position: relative;
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
 
-    .overlay {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        padding: 20px;
-        background: linear-gradient(transparent, rgba(0,0,0,0.9));
-    }
+        /* ── HERO IMAGE ── */
+        .hero {
+            width: 100%;
+            height: 280px;
+            background: #1e293b;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hero-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            color: rgba(255,255,255,0.1);
+        }
+        .hero-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 40px 20px 20px;
+            background: linear-gradient(transparent, rgba(15,23,42,0.95));
+        }
+        .hero-overlay h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+        .hero-overlay .address {
+            font-size: 0.82rem;
+            color: rgba(226,232,240,0.55);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
 
-    .content {
-        width: 100%;
-        padding: 20px;
-    }
+        /* ── BACK BUTTON ── */
+        .back-btn {
+            position: absolute;
+            top: env(safe-area-inset-top, 16px);
+            top: 16px;
+            left: 16px;
+            background: rgba(15,23,42,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            z-index: 10;
+        }
 
-    h2 {
-        font-size: 24px;
-    }
+        /* ── CONTENT ── */
+        .content {
+            padding: 20px 16px;
+        }
 
-    p {
-        font-size: 14px;
-        color: #ccc;
-    }
+        .description {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: rgba(226,232,240,0.65);
+            margin-bottom: 24px;
+        }
 
-    .audio-box {
-        background: #111;
-        padding: 10px;
-        border-radius: 10px;
-        margin-top: 10px;
-    }
-</style>
+        /* ── AUDIO SECTION ── */
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(226,232,240,0.35);
+            margin-bottom: 12px;
+        }
 
-<!-- ẢNH -->
-<div class="hero" style="background-image:url('@ViewBag.CmsBaseUrl/images/@Model.ImageUrl')">
-    <div class="overlay">
-        <h2>@Model.Name</h2>
-        <p>📍 @Model.Address</p>
-    </div>
-</div>
+        .lang-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .lang-tab {
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.05);
+            color: rgba(226,232,240,0.6);
+            cursor: pointer;
+            transition: all .2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .lang-tab.active {
+            background: linear-gradient(135deg, #38bdf8, #6366f1);
+            border-color: transparent;
+            color: white;
+        }
 
-<!-- NỘI DUNG -->
-<div class="content">
-    <p>@Model.Description</p>
+        .audio-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .audio-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        audio {
+            width: 100%;
+            border-radius: 10px;
+            accent-color: #38bdf8;
+        }
 
-    <h3>🎧 Nghe thuyết minh</h3>
+        .no-audio {
+            text-align: center;
+            padding: 30px;
+            color: rgba(226,232,240,0.3);
+            font-size: 0.9rem;
+        }
 
-    @if (list != null && list.Count > 0)
-    {
-        <!-- CHỌN NGÔN NGỮ -->
-        <select id="langSelect" onchange="changeLang()">
-            @foreach (var item in list)
+        /* ── MAPS BUTTON ── */
+        .maps-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 14px;
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: background .2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .maps-btn:active { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <div class="hero">
+        <a href="/tour" class="back-btn">‹</a>
+        @if (!string.IsNullOrEmpty(imgUrl))
+        {
+            <img src="@imgUrl" alt="@Model.Name" />
+        }
+        else
+        {
+            <div class="hero-placeholder">🏛️</div>
+        }
+        <div class="hero-overlay">
+            <h1>@Model.Name</h1>
+            @if (!string.IsNullOrEmpty(Model.Address))
             {
-                <option value="@item.AudioUrl">@item.LanguageCode</option>
+                <p class="address">📍 @Model.Address</p>
             }
-        </select>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="description">@Model.Description</p>
+        }
 
         <!-- AUDIO -->
-        <div class="audio-box">
-            <audio id="audioPlayer" controls autoplay style="width:100%">
-                <source src="@list[0].AudioUrl" type="audio/mpeg" />
-            </audio>
-        </div>
-    }
-    else
-    {
-        <p style="color: red;">Chưa có bản thu âm cho địa điểm này.</p>
-    }
-</div>
-<a href="https://www.google.com/maps/search/?api=1&query=@Model.Address"
-       target="_blank"
-       style="color:yellow;">
-    📍 Xem trên Google Maps
-</a>
-<script>
-    function changeLang() {
-        var url = document.getElementById("langSelect").value;
-        var player = document.getElementById("audioPlayer");
+        <p class="section-label">🎧 Thuyết minh</p>
 
-        player.src = url;
-        player.play();
+        @if (list.Any())
+        {
+            <!-- LANG TABS -->
+            <div class="lang-tabs" id="langTabs">
+                @for (int i = 0; i < list.Count; i++)
+                {
+                    <button class="lang-tab @(i == 0 ? "active" : "")"
+                            onclick="selectLang(@i)"
+                            id="tab-@i">@list[i].LanguageCode.ToUpper()</button>
+                }
+            </div>
+
+            <!-- AUDIO PLAYER -->
+            <div class="audio-box" id="audioBox">
+                <p class="audio-title" id="audioTitle">@list[0].Title</p>
+                <audio id="audioPlayer" controls src="@list[0].AudioUrl">
+                    Trình duyệt không hỗ trợ audio.
+                </audio>
+            </div>
+        }
+        else
+        {
+            <div class="no-audio">
+                <p>🎙️</p>
+                <p>Chưa có bản thuyết minh cho địa điểm này.</p>
+            </div>
+        }
+
+        <!-- MAPS -->
+        @if (!string.IsNullOrEmpty(Model.Address))
+        {
+            <a class="maps-btn"
+               href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(Model.Address)"
+               target="_blank">
+                🗺️ Xem trên Google Maps
+            </a>
+        }
+    </div>
+
+    @if (list.Any())
+    {
+        var translationsJson = System.Text.Json.JsonSerializer.Serialize(
+            list.Select(t => new { title = t.Title ?? "", audioUrl = t.AudioUrl ?? "" }).ToList()
+        );
+        <script>
+            var translations = @Html.Raw(translationsJson);
+
+            function selectLang(index) {
+                // Update tabs
+                document.querySelectorAll('.lang-tab').forEach((tab, i) => {
+                    tab.classList.toggle('active', i === index);
+                });
+                // Update player
+                var t = translations[index];
+                document.getElementById('audioTitle').textContent = t.title || '';
+                var player = document.getElementById('audioPlayer');
+                player.src = t.audioUrl;
+                player.play().catch(() => {});
+            }
+        </script>
     }
-</script>
+</body>
+</html>
