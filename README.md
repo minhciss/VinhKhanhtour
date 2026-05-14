@@ -63,6 +63,39 @@ Hệ thống sử dụng **GPS Geofencing** để phát hiện khi du khách đ�
 └──────────────────────┘
 ```
 
+### 🔄 Luồng quét mã QR & Kiểm tra thiết bị (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    actor Tourist as Du Khách
+    participant QR as Mã QR (Tại quán)
+    participant Web as Web App (Poi.cshtml)
+    participant CMS as CMS API (Backend)
+    participant Admin as Admin Dashboard
+
+    Tourist->>QR: Quét mã QR bằng Camera điện thoại
+    QR-->>Tourist: Điều hướng mở link (VD: /public/poi/1)
+    Tourist->>Web: Truy cập trang Web App
+    Note over Web: Hiển thị màn hình đen<br/>"Đang kiểm tra cấu hình máy..."
+    Web->>Web: JS kiểm tra navigator.hardwareConcurrency & deviceMemory
+    
+    alt RAM >= 4GB & CPU >= 4 nhân
+        Web-->>Tourist: Hiển thị "✅ Mã trả về: 0 (Cấu hình mạnh)"
+    else Cấu hình thấp hơn
+        Web-->>Tourist: Hiển thị "⚠️ Mã trả về: 1 (Cấu hình yếu)"
+    end
+    
+    Web->>CMS: POST /api/sessions/ping { deviceId, configCode }
+    CMS->>CMS: Lưu session vào In-memory Tracker
+    CMS-->>Web: 200 OK
+    
+    Note over Web: Tự động tắt màn hình chờ (sau 2.5s)<br/>Vào trang nội dung POI & nghe Audio
+    
+    Admin->>CMS: GET /api/stats/overview (Mỗi lần reload/lấy báo cáo)
+    CMS-->>Admin: Trả về danh sách Active Sessions (kèm mã 0 hoặc 1)
+    Note over Admin: Hiển thị trạng thái Cấu hình Mạnh/Yếu<br/>của thiết bị realtime trên Dashboard
+```
+
 ---
 
 ## 📦 Cấu Trúc Project
