@@ -25,7 +25,7 @@ public class SessionController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.DeviceId))
             return BadRequest("Thiếu deviceId");
 
-        _tracker.Ping(req.DeviceId);
+        _tracker.Ping(req.DeviceId, req.ConfigCode);
 
         // Dọn dẹp session cũ nhân cơ hội này (xác suất 10% để tránh overhead)
         if (Random.Shared.NextDouble() < 0.1)
@@ -42,4 +42,5 @@ public class SessionController : ControllerBase
 public class PingRequest
 {
     public string DeviceId { get; set; } = "";
+    public int ConfigCode { get; set; } = 0;
 }

@@ -80,7 +80,8 @@ public class StatsController : ControllerBase
                sessionId   = d.DeviceId,
                unlockCount = 1,
                lastSeen    = d.LastSeen,
-               expiresAt   = d.SecondsAgo + "s trước"
+               expiresAt   = d.SecondsAgo + "s trước",
+               configCode  = d.ConfigCode
          }).ToList<object>();
         /*
         var realCount = _tracker.GetActiveCount(30);

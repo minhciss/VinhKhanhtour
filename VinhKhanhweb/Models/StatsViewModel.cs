@@ -41,6 +41,7 @@ public class ActiveSession
     public int    UnlockCount { get; set; }
     public string LastSeen    { get; set; } = "";
     public string ExpiresAt   { get; set; } = "";
+    public int    ConfigCode  { get; set; }
 }
 
 public class MonthlyRevenueStat
